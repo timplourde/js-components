@@ -18,8 +18,14 @@ portfolioEditor = function (options) {
     // used when adding a new investment by typing in a ticker symbol
     self.newInvestmentTickerSymbol = ko.observable();
     self.addInvestmentByTickerSymbol = function () {
-        addInvestment({ name: self.newInvestmentTickerSymbol() });
-        self.newInvestmentTickerSymbol('');
+        var ticker = self.newInvestmentTickerSymbol();
+        if (ticker) {
+            ticker = ticker.toUpperCase().trim();
+            if (ticker.length > 0) {
+                addInvestment({ name: self.newInvestmentTickerSymbol().toUpperCase() });
+                self.newInvestmentTickerSymbol('');
+            }
+        }
     };
 
     // private function for adding an investment 
@@ -34,7 +40,7 @@ portfolioEditor = function (options) {
     // called whenever when the overall portfolio changes
     var portfolioChanged = function () {
         if (options.portfolioChangedCallback) {
-            
+
             // project investments into an object with tickers as keys 
             // e.g. {'GOOG': 15, 'APPL': 45,...}
             var investments = {};
