@@ -1,6 +1,6 @@
 # JS Components
 
-Examples of how to wire up JavaScript components, emphasizing the pros and cons of each. 
+Examples of how to wire up JavaScript components, emphasizing the pros and cons of each. Techniques used include traditional callbacks, maunal event aggregation pub/sub using [Amplify.js](http://amplifyjs.com/) and client-side message bus using [Postal.js](https://github.com/ifandelse/postal.js).
 
 This is intended for web developers who are starting to build complex client-side features (without a rich component libraries like YUI or EXT.JS) and encountering maintainability/flexability issues.  
 
