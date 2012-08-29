@@ -29,7 +29,7 @@ PortfolioEditor = function (options) {
     self.save = function () {
         self.isSaveButtonEnabled(false);
         postal.publish({
-            channel: 'portfolioEditor',
+            channel: 'PortfolioEditor',
             topic: 'save.started',
             data: 'Saving Portfolio...'
         });
@@ -42,7 +42,7 @@ PortfolioEditor = function (options) {
     var saveSuccessful = function () {
         self.isSaveButtonEnabled(true);
         postal.publish({
-            channel: 'portfolioEditor',
+            channel: 'PortfolioEditor',
             topic: 'save.success',
             data: 'YAY, SUCCESS!'
         });
@@ -50,7 +50,7 @@ PortfolioEditor = function (options) {
     var saveFailed = function () {
         self.isSaveButtonEnabled(true);
         postal.publish({
-            channel: 'portfolioEditor',
+            channel: 'PortfolioEditor',
             topic: 'save.fail',
             data: 'OH NOES!'
         });
@@ -62,7 +62,7 @@ PortfolioEditor = function (options) {
             return inv.name;
         });
         postal.publish({
-            channel: 'portfolioEditor',
+            channel: 'PortfolioEditor',
             topic: 'selectInvestments',
             data: invsToExclude
         });
@@ -82,7 +82,7 @@ PortfolioEditor = function (options) {
         });
 
         postal.publish({
-            channel: 'portfolioEditor',
+            channel: 'PortfolioEditor',
             topic: 'portfolioChanged',
             data: {
                 total: total,
@@ -111,12 +111,12 @@ PortfolioEditor = function (options) {
 
     // subscriptions
     postal.subscribe({
-        channel: 'portfolioEditor',
+        channel: 'PortfolioEditor',
         topic: 'addInvestment',
         callback: addInvestment
     });
     postal.subscribe({
-        channel: 'portfolioEditor',
+        channel: 'PortfolioEditor',
         topic: 'highlightInvestments',
         callback: highlightInvestments
     });

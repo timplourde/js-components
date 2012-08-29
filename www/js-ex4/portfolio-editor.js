@@ -55,7 +55,7 @@ PortfolioEditor = function (options) {
         });
 
         postal.publish({
-            channel: 'portfolioEditor',
+            channel: 'PortfolioEditor',
             topic: 'portfolioChanged',
             data: {
                 total: total,
@@ -84,7 +84,7 @@ PortfolioEditor = function (options) {
 
     // subscribe 
     postal.subscribe({
-        channel: 'portfolioEditor',
+        channel: 'PortfolioEditor',
         topic: 'highlightInvestments',
         callback: highlightInvestments
     });

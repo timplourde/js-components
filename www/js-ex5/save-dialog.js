@@ -44,17 +44,17 @@ SaveDialog = function (options) {
 
     // subscriptions
     postal.subscribe({
-        channel: 'saveDialog',
+        channel: 'SaveDialog',
         topic: 'showSaving',
         callback: open
     });
     postal.subscribe({
-        channel: 'saveDialog',
+        channel: 'SaveDialog',
         topic: 'showSuccess',
         callback: handleSuccess
     });
     postal.subscribe({
-        channel: 'saveDialog',
+        channel: 'SaveDialog',
         topic: 'showFail',
         callback: handleFailure
     });

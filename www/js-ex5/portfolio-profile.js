@@ -57,7 +57,7 @@ PortfolioProfile = function (options) {
 
     // subscriptions
     postal.subscribe({
-        channel: 'portfolioProfiler',
+        channel: 'PortfolioProfile',
         topic: 'update',
         callback: update
     });
@@ -75,7 +75,7 @@ PortfolioProfile = function (options) {
     // publish a message to the bus and to all subscribers registered via self.on()
     var publish = function (topic, data) {
         postal.publish({
-            channel: 'portfolioProfiler',
+            channel: 'PortfolioProfile',
             topic: topic,
             data: data
         });

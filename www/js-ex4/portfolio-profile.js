@@ -33,7 +33,7 @@ PortfolioProfile = function (options) {
             self.message('Too Conservative');
             self.isBad(true);
             postal.publish({
-                channel: 'portfolioProfile', 
+                channel: 'PortfolioProfile', 
                 topic: 'foundBadInvestments',
                 data: ['APPL']
             });
@@ -42,7 +42,7 @@ PortfolioProfile = function (options) {
         if (portfolio.investments['FB'] > 1) {
             self.message('Stupid!');
             postal.publish({
-                channel: 'portfolioProfile',
+                channel: 'PortfolioProfile',
                 topic: 'foundBadInvestments',
                 data: ['FB']
             });
@@ -60,7 +60,7 @@ PortfolioProfile = function (options) {
 
     // subscribe 
     postal.subscribe({
-        channel: 'portfolioProfile',
+        channel: 'PortfolioProfile',
         topic: 'update',
         callback: update
     });

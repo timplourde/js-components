@@ -12,7 +12,7 @@ AddInvestmentDialog = function (options) {
     self.addInvestment = function (inv) {
         inv.hasBeenAdded(true);
         postal.publish({
-            channel: 'addInvestmentDialog',
+            channel: 'AddInvestmentDialog',
             topic: 'investmentSelected',
             data: inv
         });
@@ -41,7 +41,7 @@ AddInvestmentDialog = function (options) {
   
     // subscriptions
     postal.subscribe({
-        channel: 'addInvestmentDialog', 
+        channel: 'AddInvestmentDialog', 
         topic: 'open',
         callback: open
     });

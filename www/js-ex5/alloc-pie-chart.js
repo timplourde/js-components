@@ -1,5 +1,5 @@
 
-AllocChart = function (options) {
+AllocPieChart = function (options) {
     var self = this;
     var chart = null;
 
@@ -15,5 +15,5 @@ AllocChart = function (options) {
     };
 
     // subscriptions
-    postal.channel('allocChart', 'render').subscribe(self.render).withDebounce(1000);
+    postal.channel('AllocPieChart', 'render').subscribe(self.render).withDebounce(1000);
 };

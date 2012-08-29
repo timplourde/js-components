@@ -24,5 +24,5 @@ AllocBarChart = function (options) {
     };
 
     // subscriptions
-    postal.channel('allocBarChart', 'render').subscribe(self.render).withDebounce(1000);
+    postal.channel('AllocBarChart', 'render').subscribe(self.render).withDebounce(1000);
 };
