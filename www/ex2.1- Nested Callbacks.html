@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>My Portfolio: Ex2.1- Nested Callbacks</title>
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+   <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <span class="brand">My Portfolio: Ex2.1- Nested Callbacks</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="main" class="container">
+
+      <div class="row">
+        <div class="span6">
+
+            <!-- ko with: editor -->
+            
+             <div class="row buttons">
+                <div class="span6">
+                    <input type="text" class="span2" placeholder="Enter Ticker" data-bind="value: newInvestmentTickerSymbol" />
+                    
+                    <button class="btn btn-primary" data-bind="click: addInvestmentByTickerSymbol">
+                        <i class="icon-white icon-plus"></i>
+                        Add Investment
+                    </button>
+                </div>
+            </div>
+
+
+
+            <div class="row">
+                <div class="span4">
+                    
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th class="span2">Ticker</th>
+                                <th class="span1">%</th>
+                                <th class="span1">&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                             <!-- ko foreach: investments -->
+                            <tr data-bind="css: {highlighted: isHighlighted}">
+                                <td data-bind="text: name"></td>
+                                <td><input class="span1" type="text" data-bind="value: percentage"/></td>
+                                <td>
+                                   <a tabindex="-1" href="javascript:;" data-bind="click: $parent.deleteInvestment">
+                                        <i class="icon-trash icon-black"></i>
+                                   </a>
+                                </td>
+                            </tr>
+                            <!-- /ko -->
+                            <tr>
+                                <td><strong>TOTAL</strong></td>
+                                <td data-bind="text: totalPercentage"></td>
+                                <td>&nbsp;</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                   
+
+                </div>
+            </div>
+
+           
+        
+             <!-- /ko -->
+        </div>
+        <div class="span6" >
+            
+            <!-- ko with: profile -->
+            <div class="alert alert-block" data-bind="visible: isVisible, css: {'alert-success': isGood, 'alert-error': isBad}">
+                <h4 class="alert-heading">Portfolio Profile&trade;</h4>
+                <p data-bind="text: message"></p>
+            </div>
+            <!-- /ko -->
+
+            <div id="chart"></div>
+       
+       </div>
+      </div>
+
+    </div>
+
+
+    <script type="text/javascript" src="js-common/jquery.min.js"></script>
+    <script type="text/javascript" src="js-common/underscore-min.js"></script>
+    <script type="text/javascript" src="js-common/knockout-2.1.0.js"></script>
+    <script type="text/javascript" src="js-ex2.1/portfolio-editor.js"></script>
+    <script type="text/javascript" src="js-ex2.1/portfolio-profile.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            var viewModel = {};
+
+            viewModel.profile = new PortfolioProfile();
+
+            viewModel.editor = new PortfolioEditor({
+                investments: [{ name: "MSFT", percentage: 25 },
+                               { name: "GOOG", percentage: 25 },
+                               { name: "APPL", percentage: 50}],
+                portfolioChangedCallback: viewModel.profile.update
+            });
+          
+            ko.applyBindings(viewModel);
+
+        });
+    </script>
+
+  </body>
+</html>

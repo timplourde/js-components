@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>My Portfolio: Ex5-More Complexity</title>
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+     <style type="text/css">
+        #savingDialog
+        {
+            background-color: #EFEFEF;
+            z-index: 1042;
+            opacity: 1;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+            width: 100%;
+            height: 80px;
+        }
+
+        #savingDialog h1
+        {
+            display: block;
+            float: left;
+            margin-right: 60px;
+            margin-left: 30px;
+        }
+    </style>
+  </head>
+
+ <body>
+
+   <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <span class="brand">My Portfolio: Ex5-More Complexity</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="main" class="container">
+
+      <div class="row">
+        <div class="span6">
+
+            <div id="editor">
+            
+            <div class="row">
+                <div class="span4">
+                    
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th class="span2">Ticker</th>
+                                <th class="span1">%</th>
+                                <th class="span1">&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                             <!-- ko foreach: investments -->
+                            <tr data-bind="css: {highlighted: isHighlighted}">
+                                <td data-bind="text: name"></td>
+                                <td><input class="span1" type="text" data-bind="value: percentage"/></td>
+                                <td>
+                                   <a tabindex="-1" href="javascript:;" data-bind="click: $parent.deleteInvestment">
+                                        <i class="icon-trash icon-black"></i>
+                                   </a>
+                                </td>
+                            </tr>
+                            <!-- /ko -->
+                            <tr>
+                                <td><strong>TOTAL</strong></td>
+                                <td data-bind="text: totalPercentage"></td>
+                                <td>&nbsp;</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                   
+
+                </div>
+            </div>
+
+            <div class="row buttons">
+                <div class="span3">
+                    <button class="btn btn-large btn-primary" data-bind="click: selectInvestments">
+                        <i class="icon-trash icon-white icon-plus"></i>
+                        Add Investment
+                    </button>
+                </div>
+                 <div class="span3">
+                    <button class="btn btn-large btn-success" data-bind="click: save, disable: !isSaveButtonEnabled()">Save Portfolio</button>
+                </div>
+            </div>
+        
+            </div>
+
+        </div>
+        <div class="span6" >
+            
+            <div id="profile">
+            <div class="alert alert-block" data-bind="visible: isVisible, css: {'alert-success': isGood, 'alert-error': isBad}">
+                <h4 class="alert-heading">Portfolio Profile&trade;</h4>
+                <p data-bind="text: message"></p>
+            </div>
+            </div>
+
+
+
+
+            <div class="tabbable"> 
+              <ul class="nav nav-tabs">
+                <li class="active"><a href="#tab1" data-toggle="tab">Pie Chart</a></li>
+                <li><a href="#tab2" data-toggle="tab">Bar Chart</a></li>
+              </ul>
+              <div class="tab-content">
+                <div class="tab-pane active" id="tab1">
+
+                  <div id="chart"></div>
+
+                </div>
+                <div class="tab-pane" id="tab2">
+
+                  <div id="barChart" class="span5"></div>
+                
+                </div>
+              </div>
+            </div>
+
+
+
+
+            
+            
+       </div>
+      </div>
+
+    </div> 
+
+     <div id="picker">
+     <div class="modal hide" data-bind="modalDialogVisible: visible">
+        <div class="modal-header">
+            <button type="button" class="close" data-bind="click: close">X</button>
+            <h3>Select Your Investments</h3>
+        </div>
+        <div class="modal-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th colspan="2">Ticker</th>
+                    </tr>
+                </thead>
+                 <tbody data-bind="foreach: availableInvestments">
+                    <tr >
+                        <td data-bind="text: name"></td>
+                        <td> 
+                            <button class="btn btn-primary" data-bind="visible: !hasBeenAdded(), click: $parent.addInvestment">Add</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn" data-bind="click: close">Close</a>
+        </div>
+    </div>
+    </div>
+
+    <div id="saveDialog">
+    <div id="savingDialog"  data-bind="visible: isVisible">
+       
+       <div class="progress" data-bind="css: {'progress-striped': isWaiting, 'active': isWaiting, 'progress-danger': saveFailed, 'progress-success': saveSuccessful}">
+                <div class="bar" style="width: 100%;"></div>
+            </div>
+
+        <h1 data-bind="text: title, visible: isWaiting"></h1>
+        <h1 data-bind="text: resultMessage, visible: !isWaiting()"></h1>
+        <button class="btn btn-primary" data-bind="click: close, visible: saveFailed">Close</button>
+      
+    </div>
+    </div>
+
+    <script type="text/javascript" src="js-common/jquery.min.js"></script>
+    <script type="text/javascript" src="js-common/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js-common/highcharts.js"></script>
+    <script type="text/javascript" src="js-common/knockout-2.1.0.js"></script>
+    <script type="text/javascript" src="js-common/binding-handlers.js"></script>
+    <script type="text/javascript" src="js-ex5/portfolio-editor.js"></script>
+    <script type="text/javascript" src="js-ex5/alloc-pie-chart.js"></script>
+    <script type="text/javascript" src="js-ex5/alloc-bar-chart.js"></script>
+    <script type="text/javascript" src="js-ex5/portfolio-profile.js"></script>
+    <script type="text/javascript" src="js-ex5/save-dialog.js"></script>
+    <script type="text/javascript" src="js-ex5/add-investment-dialog.js"></script>
+    <script type="text/javascript" src="js-common/underscore-min.js"></script>
+    <script type="text/javascript" src="js-common/postal.js"></script>
+    <script type="text/javascript" src="js-common/postal.diagnostics.js"></script>
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            var wireTap = new postal.diagnostics.DiagnosticsWireTap("console", function (env) {
+                console.log(_.pick(JSON.parse(env), 'channel', 'topic', 'data'));
+            });
+
+            // links up one source to one or many destinations
+            // postal.linkChannels doesn't work with there are multiple destinations
+            // this also takes a optional "processor" which mutates the message before forwarding it 
+            var forwardMessages = function (source, destination, processor) {
+                if (!_.isArray(destination)) {
+                    destination = [destination];
+                }
+                _.each(destination, function (item) {
+                    postal.subscribe({
+                        channel: source.channel,
+                        topic: source.topic,
+                        callback: function (msg) {
+                            if (processor) msg = processor(msg);
+                            postal.publish(item.channel, item.topic, msg);
+                        }
+                    });
+                });
+            };
+
+
+            // forward events between components
+            // portfolioEditor-published
+            forwardMessages(
+                { channel: 'PortfolioEditor', topic: 'selectInvestments' },
+                { channel: 'AddInvestmentDialog', topic: 'open' });
+            forwardMessages(
+                { channel: 'PortfolioEditor', topic: 'save.started' },
+                { channel: 'SaveDialog', topic: 'showSaving' });
+            forwardMessages(
+                { channel: 'PortfolioEditor', topic: 'save.success' },
+                { channel: 'SaveDialog', topic: 'showSuccess' });
+            forwardMessages(
+                { channel: 'PortfolioEditor', topic: 'save.fail' },
+                { channel: 'SaveDialog', topic: 'showFail' });
+            forwardMessages(
+                { channel: 'PortfolioEditor', topic: 'portfolioChanged' },
+                { channel: 'PortfolioProfile', topic: 'update' });
+            forwardMessages(
+                { channel: 'PortfolioEditor', topic: 'portfolioChanged' },
+                [{ channel: 'AllocPieChart', topic: 'render' },
+                { channel: 'AllocBarChart', topic: 'render'}],
+                // these listeners expect data in a different format, so use an optional processor function
+                function (allocChangedMessage) {
+                    var chartData = [];
+                    _.each(allocChangedMessage.investments, function (pct, name) {
+                        chartData.push([name, parseInt(pct, 10)]);
+                    });
+                    return chartData;
+                });
+            
+            // portfolioProfiler-published
+            forwardMessages(
+                { channel: 'PortfolioProfile', topic: 'foundTroublesomeInvestments' },
+                { channel: 'PortfolioEditor', topic: 'highlightInvestments' });
+
+            // addInvestmentDialog-published
+            forwardMessages(
+                { channel: 'AddInvestmentDialog', topic: 'investmentSelected' },
+                { channel: 'PortfolioEditor', topic: 'addInvestment' });
+
+            var chart = new AllocPieChart({
+                chartId: 'chart'
+            });
+
+            var barChart = new AllocBarChart({
+                chartId: 'barChart'
+            });
+
+            var profile = new PortfolioProfile();
+
+            var save = new SaveDialog();
+
+            var picker = new AddInvestmentDialog({
+                getInvestmentsUrl: '/investments/all'
+            });
+
+            var editor = new PortfolioEditor({
+                saveUrl: '/portfolio/save',
+                investments: [{ name: "MSFT", percentage: 25 },
+                               { name: "GOOG", percentage: 25 },
+                               { name: "APPL", percentage: 50}]
+            });
+
+            // instead of one bug view model, we're binding only to specific dom nodes
+            // this gives us some more seperation and re-usability
+            ko.applyBindings(editor, $('#editor')[0]);
+            ko.applyBindings(profile, $('#profile')[0]);
+            ko.applyBindings(picker, $('#picker')[0]);
+            ko.applyBindings(save, $('#saveDialog')[0]);
+
+
+            // demonstrate that mutating the message isn't bad when using forwarding between page components with processors
+            postal.subscribe({ channel: 'PortfolioEditor', topic: 'portfolioChanged', callback: function (m) {
+                console.log('Hey mister, PortfolioEditor.portfolioChanged:');
+                console.log(m);
+            }
+            });
+
+            // demonstrate mixing of manual event delegation and message bus
+            profile.on('foundTroublesomeInvestments', function (i) {
+                console.log('This one looks bad: ', i);
+            });
+        });
+    </script>
+
+  </body>
+</html>
