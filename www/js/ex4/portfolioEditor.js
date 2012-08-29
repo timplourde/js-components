@@ -1,5 +1,5 @@
 
-portfolioEditor = function (options) {
+PortfolioEditor = function (options) {
     var self = this;
 
     // observables and methods to edit the portfolio

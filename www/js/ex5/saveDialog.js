@@ -1,5 +1,5 @@
 
-saveDialog = function (options) {
+SaveDialog = function (options) {
     var self = this;
 
     self.isVisible = ko.observable(false);

@@ -1,5 +1,5 @@
 
-addInvestmentDialog = function (options) {
+AddInvestmentDialog = function (options) {
 
     var self = this;
 

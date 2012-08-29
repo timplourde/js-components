@@ -1,5 +1,5 @@
 
-allocChart = function (options) {
+AllocChart = function (options) {
     var self = this;
     var chart = null;
 

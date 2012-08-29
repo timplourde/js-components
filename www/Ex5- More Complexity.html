@@ -264,23 +264,23 @@
                 { channel: 'addInvestmentDialog', topic: 'investmentSelected' },
                 { channel: 'portfolioEditor', topic: 'addInvestment' });
 
-            var chart = new allocChart({
+            var chart = new AllocChart({
                 chartId: 'chart'
             });
 
-            var barChart = new allocBarChart({
+            var barChart = new AllocBarChart({
                 chartId: 'barChart'
             });
 
-            var profile = new portfolioProfiler();
+            var profile = new PortfolioProfile();
 
-            var save = new saveDialog();
+            var save = new SaveDialog();
 
-            var picker = new addInvestmentDialog({
+            var picker = new AddInvestmentDialog({
                 getInvestmentsUrl: '/investments/all'
             });
 
-            var editor = new portfolioEditor({
+            var editor = new PortfolioEditor({
                 saveUrl: '/portfolio/save',
                 investments: [{ name: "MSFT", percentage: 25 },
                                { name: "GOOG", percentage: 25 },

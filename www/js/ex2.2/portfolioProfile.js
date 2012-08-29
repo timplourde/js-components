@@ -1,5 +1,5 @@
 
-portfolioProfile = function (options) {
+PortfolioProfile = function (options) {
     var self = this;
 
 
