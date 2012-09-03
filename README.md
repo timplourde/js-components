@@ -95,6 +95,15 @@ Side note: if the previous basic pub/sub technique works for you but you don't w
 
 All we changed was calls to ``amplify.publish/amplify.subscribe`` to ``$.publish/$.subscribe``. Also, because this uses jQuery Events internally, each callback receives a ``event`` object which it ignores.  That's may be accpetable for your needs.
 
+## Example 3.2: Event emitters with Lucid
+
+Here we're using Lucid.js to add public event emitters to each component and wiring them up after they are constructed.  Each component internally triggers events on its emitter.  
+On the plus side, the code is pretty minimal and nicely decoupled. On the negatie side, we need to expose more public functions on each component to wire them up (e.g. ``update`` in the ``editor`` used to be private) and we needed this new ``emitter`` property on each component.
+
+## Example 3.3: Lucid event aggregation
+
+In this example we are able to hide some of those unwanted public functions by taking advantage of Lucid's ``pipe`` function which allows you to forward events.  This requires us to rename events so that they are "namespaced" using dots.  Lucid allows for "sub events" using dot notation, so we're also able to log all events in the ``centralHub`` emitter based on the component.
+On the plus side, we're able to minimize the surface area of each component and gained some logging functionality.  On the negative side, there's more code to wire up the events than in the previous example and we still need the public ``emitter`` property on each component.
 
 ## Example 4: Message Bus with Postal.js
 
@@ -141,6 +150,7 @@ No problem!  Changes made:
 * [Underscore.js](http://underscorejs.org/)
 * [Amplify.js](http://amplifyjs.com/)
 * [Knockout.js](http://knockoutjs.com/)
+* [Lucid.js](http://robertwhurst.github.com/LucidJS/)
 * [Postal.js](https://github.com/ifandelse/postal.js)
 * [jQuery Tiny Pub/Sub](https://gist.github.com/661855/)
 * [HighCharts](http://www.highcharts.com/)

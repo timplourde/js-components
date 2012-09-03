@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>My Portfolio: Ex3.3-Lucid decoupled</title>
+    <title>My Portfolio: Ex3.3-Lucid event aggregation</title>
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
@@ -13,7 +13,7 @@
    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <span class="brand">My Portfolio: Ex3.3- Lucid decoupled</span>
+          <span class="brand">My Portfolio: Ex3.3- Lucid event aggregation</span>
         </div>
       </div>
     </div>
@@ -110,24 +110,25 @@
             viewModel.profile = new PortfolioProfile();
             viewModel.editor = new PortfolioEditor();
 
-            // pipe component events to 'central'
-            var central = LucidJS.emitter();
-            central.pipe('PortfolioEditor.portfolioChanged', viewModel.editor.emitter);
-            central.pipe('PortfolioProfile.foundBadInvestments', viewModel.profile.emitter);
+            // pipe specific component events to centralHub
+            var centralHub = LucidJS.emitter();
+            centralHub.pipe('PortfolioEditor.portfolioChanged', viewModel.editor.emitter);
+            centralHub.pipe('PortfolioProfile.foundBadInvestments', viewModel.profile.emitter);
 
-            // forward events
-            central.on('PortfolioEditor.portfolioChanged', function (data) {
+            // wire up components by subscribing to events and calling triggers (instead of public functions directly)
+            centralHub.on('PortfolioEditor.portfolioChanged', function (data) {
                 viewModel.profile.emitter.trigger('PortfolioProfile.update', data);
             });
-            central.on('PortfolioProfile.foundBadInvestments', function (data) {
+            centralHub.on('PortfolioProfile.foundBadInvestments', function (data) {
                 viewModel.editor.emitter.trigger('PortfolioEditor.highlightInvestments', data);
             });
 
-            // log all events 
-            central.on('PortfolioEditor', function (data) {
+            // lucid allows for 'sub events' using dot notation in the event name
+            // log all events for each component to the console
+            centralHub.on('PortfolioEditor', function (data) {
                 console.log(data);
             });
-            central.on('PortfolioProfile', function (data) {
+            centralHub.on('PortfolioProfile', function (data) {
                 console.log(data);
             });
 
