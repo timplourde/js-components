@@ -41,6 +41,10 @@ PortfolioEditor = function (options) {
         self.investments.push(investment);
     };
 
+    var fireEvent = function (event, data) {
+        amplify.publish(event, data);
+    };
+
     // called whenever when the overall portfolio changes
     var portfolioChanged = function () {
 
@@ -54,7 +58,7 @@ PortfolioEditor = function (options) {
             investments[inv.name] = percentage;
         });
 
-        amplify.publish('portfolioChanged', {
+        fireEvent('portfolioChanged', {
             total: total,
             investments: investments
         });
@@ -81,4 +85,5 @@ PortfolioEditor = function (options) {
     // subscribe 
     amplify.subscribe('foundBadInvestments', highlightInvestments);
 
+    
 };

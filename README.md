@@ -1,6 +1,6 @@
 # JS Components
 
-This is a tutorial with several examples of how to wire up JavaScript components, emphasizing the pros and cons of each. Techniques used include traditional callbacks, event delegation, [Lucid.js](http://robertwhurst.github.com/LucidJS/) event emitters, pub/sub using [Amplify.js](http://amplifyjs.com/) and [jQuery Tiny Pub/Sub](https://gist.github.com/661855/) and finally client-side message bus using [Postal.js](https://github.com/ifandelse/postal.js).
+This is a tutorial with several examples of how to wire up JavaScript components, emphasizing the pros and cons of each. Techniques used include traditional callbacks, event delegation, [Lucid.js](http://robertwhurst.github.com/LucidJS/) event emitters, pub/sub using [Amplify.js](http://amplifyjs.com/) and finally client-side message bus using [Postal.js](https://github.com/ifandelse/postal.js).
 
 This tutorial is intended for web developers who are starting to build complex client-side features (without a rich component libraries like YUI or EXT.JS) and encountering maintainability/flexability issues.  
 
@@ -70,6 +70,8 @@ Mission accomplished, time for happy hour!
 
 As a user, I need any "troublesome" investments to be highlighed in the Portfolio Editor whenver the Portfolio Profile detects a "bad" portfolio so I can identify which ones need my attention.
 
+So now we need two-way communication between our compoments.  Let's see how we can achieve that while remaining decoupled.
+
 ## Example 2: Chicken and Egg
 
 We'll use the same technique to add an event handler for the ``profile`` as we did with the ``editor``.  
@@ -127,7 +129,7 @@ We have avoided the chicken-and-egg problem successfully and we're still decoupl
 
 It's a bit messy.  As we add and extend our components over time, the number of these "optional callbacks" will increase and we'll need to change everything much more often that we'd like to.
 
-## Example 4: Event Aggregation
+## Example 4: Event Delegation
 
 One way to avoid the sequence issues encountered in adding callbacks in constructor functions is to set up some event delegation.  In this example, we'll use new public functions on each component called ``.on()`` which regiser one or more event handlers to respond to events. We'll also create ``publish()`` private functions to publish events to any listeners.  The resulting initialization code looks like this:
 
@@ -195,7 +197,7 @@ We're no longer writing our own event delegation code in each component (or prot
 
 ### Cons
 
-We needed to expose the ``emitter`` property on each component as well as the ``editor.highlightInvestments`` and ``profile.update`` functions so that we could wire them up.  Usually when you're building component-based systems, minimizing your public surface area is important.
+We needed to expose the ``emitter`` property on each component as well as the ``editor.highlightInvestments`` and ``profile.update`` functions so that we could wire them up.  Usually when you're building component-based systems, minimizing your public surface area is usually important.
 
 Like in the previous example, we also needed to initialize our ``editor`` after construction.
 
@@ -256,23 +258,39 @@ We have fewer public functions with this technique and some logging/debugging.
 We still have the ``emitter`` public properties exposed on each compoment.
 
 
+## Example 7: Amplify.js Pub/Sub
+
+[Amplify.js](http://amplifyjs.com/) is another handy library which offers, among other things, pub/sub.  It's very simple; you publish messages to *topics* which are received by anything which has subscribed to it. Each component is now internally publishing and subscribing to amplify internally and our initialization looks like this:
+
+	$(document).ready(function () {
+
+		var viewModel = {};
+
+		viewModel.profile = new PortfolioProfile();
+
+		viewModel.editor = new PortfolioEditor({
+			investments: [{ name: "MSFT", percentage: 25 },
+						   { name: "GOOG", percentage: 25 },
+						   { name: "APPL", percentage: 50}]
+		});
+
+		ko.applyBindings(viewModel);
+
+	});
+
+### Pros
+
+Look how clean that is!  We're no longer worried about wiring things up, we just get it for free!  We're also not concerned with initializing the ```editor``` after construction because amplify's pub/sub messaging is entirely separate: if nobody is listening then no big deal.  Also, we're not unnecessarily exposing functions on each component.
+
+**Side note:** [jQuery Tiny Pub/Sub](https://gist.github.com/661855/) is jQuery plugin which provides almost the same functionality. So if this technique is adequate for your needs and you don't want to take a dependency on Amplify, you can use that instead.
+
+### Cons
+
+Unfortunately we lost some decoupling.  For example, there is no reason why the ``profile`` component needs to know about something called a `portfolioChanged` event/topic.  As we add components to our application, they will all need to be modified to know about each other.  
+
+We could try to reduce this coupling in a similar way we did with Lucid in the previous example- by making all events "namespaced", aggregating them and forwarding to "private" topics but instead let's try another approach.
 
 
-
-## Example X: Amplify
-
-
-**Amplify.js** is a handy library which offers, among other things, pub/sub.  It's very simple, you publish messages to *topics* which are received by anything which has subscribed to it.
-
-If you look at the HTML file you'll notice the object construction is clean with no callback registration.
-
-Inside each component, you'll notice calls like ``amplify.publish`` and ``amplify.subscribe``.  
-
-On the positive side, the JS in the HTML file is clean with no callback registration logic and everything works as expected.  Also, the callback functions on each subscription no longer need to be public, which decreases the surface area of each component.
-
-On the negative side, each component is publishing/subscribing to topic which they should not know about.  This approach is acceptable if you're working on a small project, when you don't expect a lot of change and can agree on standard topic names and message formats.  
-
-However, this isn't good enough for us.  We need each component to be as decoupled as possible.
 
 ## Example 3.1: Basic Pub/Sub with jQuery 
 
@@ -337,5 +355,4 @@ No problem!  Changes made:
 * [Knockout.js](http://knockoutjs.com/)
 * [Lucid.js](http://robertwhurst.github.com/LucidJS/)
 * [Postal.js](https://github.com/ifandelse/postal.js)
-* [jQuery Tiny Pub/Sub](https://gist.github.com/661855/)
 * [HighCharts](http://www.highcharts.com/)
