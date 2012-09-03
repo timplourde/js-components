@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>My Portfolio: Ex3.3-Lucid event aggregation</title>
+    <title>My Portfolio: Ex6- Lucid with privacy</title>
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
@@ -13,7 +13,7 @@
    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <span class="brand">My Portfolio: Ex3.3- Lucid event aggregation</span>
+          <span class="brand">My Portfolio: Ex6- Lucid with privacy</span>
         </div>
       </div>
     </div>
@@ -99,8 +99,8 @@
     <script type="text/javascript" src="js-common/underscore-min.js"></script>
     <script type="text/javascript" src="js-common/knockout-2.1.0.js"></script>
     <script type="text/javascript" src="js-common/lucid.js"></script>
-    <script type="text/javascript" src="js-ex3.3/portfolio-editor.js"></script>
-    <script type="text/javascript" src="js-ex3.3/portfolio-profile.js"></script>
+    <script type="text/javascript" src="js-ex6/portfolio-editor.js"></script>
+    <script type="text/javascript" src="js-ex6/portfolio-profile.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
@@ -110,12 +110,12 @@
             viewModel.profile = new PortfolioProfile();
             viewModel.editor = new PortfolioEditor();
 
-            // pipe specific component events to centralHub
+            // aggregate specific component events to centralHub
             var centralHub = LucidJS.emitter();
             centralHub.pipe('PortfolioEditor.portfolioChanged', viewModel.editor.emitter);
             centralHub.pipe('PortfolioProfile.foundBadInvestments', viewModel.profile.emitter);
 
-            // wire up components by subscribing to events and calling triggers (instead of public functions directly)
+            // wire up components by subscribing to events and triggering 'internal' events instead of calling public functions
             centralHub.on('PortfolioEditor.portfolioChanged', function (data) {
                 viewModel.profile.emitter.trigger('PortfolioProfile.update', data);
             });
@@ -123,7 +123,7 @@
                 viewModel.editor.emitter.trigger('PortfolioEditor.highlightInvestments', data);
             });
 
-            // lucid allows for 'sub events' using dot notation in the event name
+            // BONUS! lucid allows for 'sub events' using dot notation in the event name
             // log all events for each component to the console
             centralHub.on('PortfolioEditor', function (data) {
                 console.log(data);

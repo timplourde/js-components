@@ -56,7 +56,7 @@ PortfolioEditor = function (options) {
             investments[inv.name] = percentage;
         });
 
-        self.emitter.trigger('PortfolioEditor.portfolioChanged', {
+        fireEvent('PortfolioEditor.portfolioChanged', {
             total: total,
             investments: investments
         });
@@ -87,5 +87,9 @@ PortfolioEditor = function (options) {
 
     // subscribe 
     self.emitter.on('PortfolioEditor.highlightInvestments', highlightInvestments);
+
+    var fireEvent = function (event, data) {
+        self.emitter.trigger(event, data);
+    };
 
 };

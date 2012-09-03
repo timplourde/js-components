@@ -34,13 +34,13 @@ PortfolioProfile = function (options) {
         if (portfolio.investments['APPL'] > 50) {
             self.message('Too Conservative');
             self.isBad(true);
-            self.emitter.trigger('PortfolioProfile.foundBadInvestments', ['APPL']);
+            fireEvent('PortfolioProfile.foundBadInvestments', ['APPL']);
           
             return;
         }
         if (portfolio.investments['FB'] > 1) {
             self.message('Stupid!');
-            self.emitter.trigger('PortfolioProfile.foundBadInvestments', ['FB']);
+            fireEvent('PortfolioProfile.foundBadInvestments', ['FB']);
             self.isBad(true);
             return;
         }
@@ -55,5 +55,9 @@ PortfolioProfile = function (options) {
 
     // subscribe 
     self.emitter.on('PortfolioProfile.update', update);
+
+    var fireEvent = function (event, data) {
+        self.emitter.trigger(event, data);
+    };
 
 };

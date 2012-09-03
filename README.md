@@ -163,7 +163,7 @@ Since we need to register these event handlers after construction, we needed to 
 
 Also, we'll probably want more functionality eventually like an ``off()`` function for removing subscribers.  Also, all of this event delegation logic is repeated in both components which isn't ideal.  We could add it to a prototype for all components or compose in an event delegation function... but that all smells like we're reinventing the wheel.
 
-## Example 4: Lucid Event Emitters
+## Example 5: Lucid Event Emitters
 
 [Lucid.js](http://robertwhurst.github.com/LucidJS/) is a handy library which provides event delegation functionality.  We added an ``emitter`` public property on each component and call ``self.emitter.trigger()`` to fire our events from within each component and wire them up like so:
 
@@ -196,6 +196,68 @@ We're no longer writing our own event delegation code in each component (or prot
 ### Cons
 
 We needed to expose the ``emitter`` property on each component as well as the ``editor.highlightInvestments`` and ``profile.update`` functions so that we could wire them up.  Usually when you're building component-based systems, minimizing your public surface area is important.
+
+Like in the previous example, we also needed to initialize our ``editor`` after construction.
+
+## Example 6: Lucid With Privacy
+
+We'll modify the previous example to hide the public functions of each component by taking advantage of features in lucid.  
+
+	$(document).ready(function () {
+
+		var viewModel = {};
+
+		viewModel.profile = new PortfolioProfile();
+		viewModel.editor = new PortfolioEditor();
+
+		// aggregate specific component events to centralHub
+		var centralHub = LucidJS.emitter();
+		centralHub.pipe('PortfolioEditor.portfolioChanged', viewModel.editor.emitter);
+		centralHub.pipe('PortfolioProfile.foundBadInvestments', viewModel.profile.emitter);
+
+		// wire up components by subscribing to events and triggering 'internal' events instead of calling public functions
+		centralHub.on('PortfolioEditor.portfolioChanged', function (data) {
+			viewModel.profile.emitter.trigger('PortfolioProfile.update', data);
+		});
+		centralHub.on('PortfolioProfile.foundBadInvestments', function (data) {
+			viewModel.editor.emitter.trigger('PortfolioEditor.highlightInvestments', data);
+		});
+
+		// BONUS! lucid allows for 'sub events' using dot notation in the event name
+		// log all events for each component to the console
+		centralHub.on('PortfolioEditor', function (data) {
+			console.log(data);
+		});
+		centralHub.on('PortfolioProfile', function (data) {
+			console.log(data);
+		});
+
+		// initialize after construction
+		viewModel.editor.init({
+			investments: [{ name: "MSFT", percentage: 25 },
+						   { name: "GOOG", percentage: 25 },
+						   { name: "APPL", percentage: 50 }]
+		});
+		
+		ko.applyBindings(viewModel);
+
+	});
+
+First, we have "namespaced" the events based on their component name and used lucid's ``pipe`` function to aggregate events to a central aggregator.  We then use this aggregator to wire up events from each component to each other.  But instead of calling public functions, we are raising "private" events on each component.
+
+We're also logging all events passing through the aggregator to the console.
+
+### Pros
+
+We have fewer public functions with this technique and some logging/debugging.
+
+### Cons
+
+We still have the ``emitter`` public properties exposed on each compoment.
+
+
+
+
 
 ## Example X: Amplify
 
