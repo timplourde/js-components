@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>My Portfolio: Ex5-More Complexity</title>
+    <title>My Portfolio: Ex9- Postal With More Complexity</title>
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
      <style type="text/css">
@@ -34,7 +34,7 @@
    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <span class="brand">My Portfolio: Ex5-More Complexity</span>
+          <span class="brand">My Portfolio: Ex9- Postal With More Complexity</span>
         </div>
       </div>
     </div>
@@ -186,12 +186,12 @@
     <script type="text/javascript" src="js-common/highcharts.js"></script>
     <script type="text/javascript" src="js-common/knockout-2.1.0.js"></script>
     <script type="text/javascript" src="js-common/binding-handlers.js"></script>
-    <script type="text/javascript" src="js-ex5/portfolio-editor.js"></script>
-    <script type="text/javascript" src="js-ex5/alloc-pie-chart.js"></script>
-    <script type="text/javascript" src="js-ex5/alloc-bar-chart.js"></script>
-    <script type="text/javascript" src="js-ex5/portfolio-profile.js"></script>
-    <script type="text/javascript" src="js-ex5/save-dialog.js"></script>
-    <script type="text/javascript" src="js-ex5/add-investment-dialog.js"></script>
+    <script type="text/javascript" src="js-ex9/portfolio-editor.js"></script>
+    <script type="text/javascript" src="js-ex9/alloc-pie-chart.js"></script>
+    <script type="text/javascript" src="js-ex9/alloc-bar-chart.js"></script>
+    <script type="text/javascript" src="js-ex9/portfolio-profile.js"></script>
+    <script type="text/javascript" src="js-ex9/save-dialog.js"></script>
+    <script type="text/javascript" src="js-ex9/add-investment-dialog.js"></script>
     <script type="text/javascript" src="js-common/underscore-min.js"></script>
     <script type="text/javascript" src="js-common/postal.js"></script>
     <script type="text/javascript" src="js-common/postal.diagnostics.js"></script>
@@ -200,12 +200,13 @@
 
         $(document).ready(function () {
 
+            // allos us to listen to all messages on the bus
             var wireTap = new postal.diagnostics.DiagnosticsWireTap("console", function (env) {
                 console.log(_.pick(JSON.parse(env), 'channel', 'topic', 'data'));
             });
 
             // links up one source to one or many destinations
-            // postal.linkChannels doesn't work with there are multiple destinations
+            // postal.linkChannels doesn't work with there are multiple destinations (not sure why yet)
             // this also takes a optional "processor" which mutates the message before forwarding it 
             var forwardMessages = function (source, destination, processor) {
                 if (!_.isArray(destination)) {
@@ -287,25 +288,16 @@
                                { name: "APPL", percentage: 50}]
             });
 
-            // instead of one bug view model, we're binding only to specific dom nodes
-            // this gives us some more seperation and re-usability
+            // instead of one big view model and <!-- ko: with --> statements for each component, 
+            // we're binding each compoment to specific dom nodes
+            // this makes it more possible to add components built with other MV* frameworks in the future
+
             ko.applyBindings(editor, $('#editor')[0]);
             ko.applyBindings(profile, $('#profile')[0]);
             ko.applyBindings(picker, $('#picker')[0]);
             ko.applyBindings(save, $('#saveDialog')[0]);
 
 
-            // demonstrate that mutating the message isn't bad when using forwarding between page components with processors
-            postal.subscribe({ channel: 'PortfolioEditor', topic: 'portfolioChanged', callback: function (m) {
-                console.log('Hey mister, PortfolioEditor.portfolioChanged:');
-                console.log(m);
-            }
-            });
-
-            // demonstrate mixing of manual event delegation and message bus
-            profile.on('foundTroublesomeInvestments', function (i) {
-                console.log('This one looks bad: ', i);
-            });
         });
     </script>
 

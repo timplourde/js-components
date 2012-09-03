@@ -43,20 +43,18 @@ SaveDialog = function (options) {
     };
 
     // subscriptions
-    postal.subscribe({
-        channel: 'SaveDialog',
-        topic: 'showSaving',
-        callback: open
-    });
-    postal.subscribe({
-        channel: 'SaveDialog',
-        topic: 'showSuccess',
-        callback: handleSuccess
-    });
-    postal.subscribe({
-        channel: 'SaveDialog',
-        topic: 'showFail',
-        callback: handleFailure
-    });
+
+    var subscribe = function (event, callback) {
+        postal.subscribe({
+            channel: 'SaveDialog',
+            topic: event,
+            callback: callback
+        });
+    };
+
+    subscribe('showSaving', open);
+    subscribe('showSuccess', handleSuccess);
+    subscribe('showFail', handleFailure);
+
 
 };

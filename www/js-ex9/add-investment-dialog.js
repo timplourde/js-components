@@ -11,11 +11,7 @@ AddInvestmentDialog = function (options) {
 
     self.addInvestment = function (inv) {
         inv.hasBeenAdded(true);
-        postal.publish({
-            channel: 'AddInvestmentDialog',
-            topic: 'investmentSelected',
-            data: inv
-        });
+        fireEvent('investmentSelected',inv);
     };
 
     var getAllInvestments = function () {
@@ -45,5 +41,13 @@ AddInvestmentDialog = function (options) {
         topic: 'open',
         callback: open
     });
+
+    var fireEvent = function (event, data) {
+        postal.publish({
+            channel: 'AddInvestmentDialog',
+            topic: event,
+            data: data
+        });
+    };
 
 };

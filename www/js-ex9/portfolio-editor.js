@@ -24,36 +24,32 @@ PortfolioEditor = function (options) {
         self.investments.push(investment);
     };
 
+    var fireEvent = function (event, data) {
+        postal.publish({
+            channel: 'PortfolioEditor',
+            topic: event,
+            data: data
+        });
+    };
+
     // SAVING
     self.isSaveButtonEnabled = ko.observable(true);
     self.save = function () {
         self.isSaveButtonEnabled(false);
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'save.started',
-            data: 'Saving Portfolio...'
-        });
+        fireEvent('save.started','Saving Portfolio...');
         console.log('saving data to ' + options.saveUrl);
         setTimeout(function () {
-            // 50% chance of success, just to demonstrate some variability
+            // 50% chance of success, just to demonstrate
             new Date().getTime() % 2 === 0 ? saveSuccessful() : saveFailed();
         }, 1000);
     };
     var saveSuccessful = function () {
         self.isSaveButtonEnabled(true);
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'save.success',
-            data: 'YAY, SUCCESS!'
-        });
+        fireEvent('save.success', 'YAY, SUCCESS!');
     }
     var saveFailed = function () {
         self.isSaveButtonEnabled(true);
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'save.fail',
-            data: 'OH NOES!'
-        });
+        fireEvent('save.fail', 'OH NOES!');
     }
 
     // SELECT INVESTMENTS (i.e. the 'add investments' button)
@@ -61,11 +57,7 @@ PortfolioEditor = function (options) {
         var invsToExclude = _.map(self.investments(), function (inv) {
             return inv.name;
         });
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'selectInvestments',
-            data: invsToExclude
-        });
+        fireEvent('selectInvestments', invsToExclude);
     };
 
     var allocChanged = function () {
@@ -81,14 +73,11 @@ PortfolioEditor = function (options) {
             inv.isHighlighted(false);
         });
 
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'portfolioChanged',
-            data: {
-                total: total,
-                investments: investments
-            }
+        fireEvent('portfolioChanged', {
+            total: total,
+            investments: investments
         });
+       
     };
 
     var highlightInvestments = function (invsToHighlight) {
@@ -110,14 +99,14 @@ PortfolioEditor = function (options) {
     }
 
     // subscriptions
-    postal.subscribe({
-        channel: 'PortfolioEditor',
-        topic: 'addInvestment',
-        callback: addInvestment
-    });
-    postal.subscribe({
-        channel: 'PortfolioEditor',
-        topic: 'highlightInvestments',
-        callback: highlightInvestments
-    });
+    var subscribe = function (event, callback) {
+        postal.subscribe({
+            channel: 'PortfolioEditor',
+            topic: event,
+            callback: callback
+        });
+    };
+    subscribe('addInvestment', addInvestment);
+    subscribe('highlightInvestments', highlightInvestments);
+  
 };

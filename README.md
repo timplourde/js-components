@@ -1,4 +1,5 @@
 
+
 # JS Components
 
 This is a tutorial with several examples of how to wire up JavaScript components, emphasizing the pros and cons of each. Techniques used include traditional callbacks, event delegation, [Lucid.js](http://robertwhurst.github.com/LucidJS/) event emitters, pub/sub using [Amplify.js](http://amplifyjs.com/) and finally client-side message bus using [Postal.js](https://github.com/ifandelse/postal.js).
@@ -342,46 +343,131 @@ Arguably we could have built the same solution using Amplify, but Postal's chann
 
 Postal requires [Underscore.js](http://underscorejs.org/) which we've been using all along.
 
----
+# New Requirements: More Stuff!
 
+Let's make it more interesting by adding more features:
 
-## Example 4: Message Bus with Postal.js
-
-What we really need to a full-fleged client-side message bus to provide decoupled, message-based communication among our components.  Enter **Postal.js**.
-
-Postal is a more full-fledged message bus library offering a bunch of great functionality, not limited to:
-
-* **Channels:** logical boundaries for groupd of topics
-* **Topics:** can be subscribed to with wildcard pattern matching (*, #) and handy modifier functions like ``.debounce()`` and ``.distinctUntilChanged()`` which regulate calling of callbacks based on the stream of messages.
-* **Wiretaps:** using a plugin, you can snoop on all messages being passed around on the bus which is handy for debugging
-* **linkChannels:** forward messages from one channel/topic to another
-
-In this example, we have modified each component to publish on and subscribe to ONLY THEIR CHANNEL.  We also use ``linkChannels`` to "plug together" the components, forwarding messages on each component's internal topics to one another.  
-
-There is also a wiretap which logs all messages to the console for debugging purposes.
-
-On the positive side, this technique offers complete encapsulation of each component, minimal public functions, excellent debugging and no messy callback issues.  Also, it clearly identifies the role of the JS in the HTML page as the "compositor"; responsible for creating each component and wiring them up.  
-
-On the negative side, Postal requires **Underscore.js** (which we have been using all along) and it's arguably "chatty" compared to the previous example using Amplify.js.
-
-Using Postal.js can make complex pages with lots of components much easier to handle, as we'll see in the next example...
-
-## Example 5: (Extra credit, just for fun) More Complexity!!!
-
-**NEW REQUIREMENTS:** 
-
-* Add a pie chart and bar chart to illustrate the current state of the portfolio
+* Add a pie chart **and** bar chart to illustrate the current state of the portfolio.  These charts should not "flicker" (change too rapidly) when the user is updating their portfolio.
 * Add an "investment picker" which enables the user to select from a predetermined set of investments.  The user should not be able to add investments which are already in their portfolio.
 * Add a the ability to save a portfolio, using a "toast" notification UI which handles success and error scenarios.
 * All of these new components must also be completely decoupled because we plan to use them elsewhere in the near future.
 
-No problem!  Changes made:
+## Example 9: Postal With More Complexity
 
-* ``addInvestmentDialog`` component: displays the list of investments to choose from, excluding a set ticker symbols if relevant. The user can click on the Add button to add one.
-* ``saveDialog`` component: displays a saving/success/error messages and is wired to the ``editor``'s internal ``save.*`` topic events.
-* ``allocBarChart`` and ``allocPieChart`` components: display charts of the current portfolio.  Notice that these components take data in a different format that is currently sent by the ``editor``.  A special ``forwardMessages`` function is used here like ``postal.linkChannels`` but it takes an optional ``processor`` function which mutates the message in mid-flight.  Note that this should be done sparingly becase mutating a message is generally against message bus design principles. However, it works and doesn't negatively affect subscriber downstream in this specific case.
+No problem!  We've added new components and wired them up using Postal like so:
+
+$(document).ready(function () {
+
+	// allos us to listen to all messages on the bus
+	var wireTap = new postal.diagnostics.DiagnosticsWireTap("console", function (env) {
+		console.log(_.pick(JSON.parse(env), 'channel', 'topic', 'data'));
+	});
+
+	// links up one source to one or many destinations
+	// postal.linkChannels doesn't work with there are multiple destinations (not sure why yet)
+	// this also takes a optional "processor" which mutates the message before forwarding it 
+	var forwardMessages = function (source, destination, processor) {
+		if (!_.isArray(destination)) {
+			destination = [destination];
+		}
+		_.each(destination, function (item) {
+			postal.subscribe({
+				channel: source.channel,
+				topic: source.topic,
+				callback: function (msg) {
+					if (processor) msg = processor(msg);
+					postal.publish(item.channel, item.topic, msg);
+				}
+			});
+		});
+	};
+
+
+	// forward events between components
+	// portfolioEditor-published
+	forwardMessages(
+		{ channel: 'PortfolioEditor', topic: 'selectInvestments' },
+		{ channel: 'AddInvestmentDialog', topic: 'open' });
+	forwardMessages(
+		{ channel: 'PortfolioEditor', topic: 'save.started' },
+		{ channel: 'SaveDialog', topic: 'showSaving' });
+	forwardMessages(
+		{ channel: 'PortfolioEditor', topic: 'save.success' },
+		{ channel: 'SaveDialog', topic: 'showSuccess' });
+	forwardMessages(
+		{ channel: 'PortfolioEditor', topic: 'save.fail' },
+		{ channel: 'SaveDialog', topic: 'showFail' });
+	forwardMessages(
+		{ channel: 'PortfolioEditor', topic: 'portfolioChanged' },
+		{ channel: 'PortfolioProfile', topic: 'update' });
+	forwardMessages(
+		{ channel: 'PortfolioEditor', topic: 'portfolioChanged' },
+		[{ channel: 'AllocPieChart', topic: 'render' },
+		{ channel: 'AllocBarChart', topic: 'render'}],
+		// these listeners expect data in a different format, so use an optional processor function
+		function (allocChangedMessage) {
+			var chartData = [];
+			_.each(allocChangedMessage.investments, function (pct, name) {
+				chartData.push([name, parseInt(pct, 10)]);
+			});
+			return chartData;
+		});
+	
+	// portfolioProfiler-published
+	forwardMessages(
+		{ channel: 'PortfolioProfile', topic: 'foundTroublesomeInvestments' },
+		{ channel: 'PortfolioEditor', topic: 'highlightInvestments' });
+
+	// addInvestmentDialog-published
+	forwardMessages(
+		{ channel: 'AddInvestmentDialog', topic: 'investmentSelected' },
+		{ channel: 'PortfolioEditor', topic: 'addInvestment' });
+
+	var chart = new AllocPieChart({
+		chartId: 'chart'
+	});
+
+	var barChart = new AllocBarChart({
+		chartId: 'barChart'
+	});
+
+	var profile = new PortfolioProfile();
+
+	var save = new SaveDialog();
+
+	var picker = new AddInvestmentDialog({
+		getInvestmentsUrl: '/investments/all'
+	});
+
+	var editor = new PortfolioEditor({
+		saveUrl: '/portfolio/save',
+		investments: [{ name: "MSFT", percentage: 25 },
+					   { name: "GOOG", percentage: 25 },
+					   { name: "APPL", percentage: 50}]
+	});
+
+	// instead of one big view model and <!-- ko: with --> statements for each component, 
+	// we're binding each compoment to specific dom nodes
+	// this makes it more possible to add components built with other MV* frameworks in the future
+
+	ko.applyBindings(editor, $('#editor')[0]);
+	ko.applyBindings(profile, $('#profile')[0]);
+	ko.applyBindings(picker, $('#picker')[0]);
+	ko.applyBindings(save, $('#saveDialog')[0]);
+});
+
+Here's what we did:
+
+* ``AddInvestmentDialog`` component: displays the list of investments to choose from, excluding a set ticker symbols if relevant. The user can click on the Add button to add one.
+* ``SaveDialog`` component: displays a saving/success/error messages and is wired to the ``editor``'s internal ``save.*`` topic events.
+* ``AllocBarChart`` and ``AllocPieChart`` components: display charts of the current portfolio.  Notice that these components take data in a different format that is currently sent by ``PortfolioEditor.portfolioChanged``.  A special ``forwardMessages`` function is used here like ``postal.linkChannels`` but it takes an optional ``processor`` function which mutates the message in mid-flight.  Note that this should be done sparingly becase mutating a message is generally against message bus design principles. However, it works and doesn't negatively affect subscriber downstream in this specific case.
 * We're calling ``ko.applyBindings(vm, domNode)`` for each component instead of making one big view model and binding it to the entire page just to promote composability of the page.  This also makes it easier if any one of the components changes their internal implementation to use a different MV* library internally in the future.
-* Manual event aggregation was added to the ``profile`` component to demonstrate that pub/sub and manual callback management can both be provided, in case your component can't be 100% certain that postal will be available.  It's generally a good idea to build a clean public API to your components first, then add pub/sub capabilities later.
+
+# Summary
+
+In this tutorial we've seen several techniques for decoupling JavaScript components: manual callbacks, event delegation, Lucid, Amplify and Postal.  They all have their pros and cons.
+
+There is no "best practice", only practices which are appropriate to your context.  
 
 ## Libraries Used
 
