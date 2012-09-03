@@ -163,7 +163,42 @@ Since we need to register these event handlers after construction, we needed to 
 
 Also, we'll probably want more functionality eventually like an ``off()`` function for removing subscribers.  Also, all of this event delegation logic is repeated in both components which isn't ideal.  We could add it to a prototype for all components or compose in an event delegation function... but that all smells like we're reinventing the wheel.
 
-## Example 3: Basic Pub/Sub With Amplify.js
+## Example 4: Lucid Event Emitters
+
+[Lucid.js](http://robertwhurst.github.com/LucidJS/) is a handy library which provides event delegation functionality.  We added an ``emitter`` public property on each component and call ``self.emitter.trigger()`` to fire our events from within each component and wire them up like so:
+
+	$(document).ready(function () {
+
+		var viewModel = {};
+
+		viewModel.profile = new PortfolioProfile();
+		viewModel.editor = new PortfolioEditor();
+
+		// wire up events
+		viewModel.editor.emitter.on('portfolioChanged', viewModel.profile.update);
+		viewModel.profile.emitter.on('foundBadInvestments', viewModel.editor.highlightInvestments);
+		
+		// initialize after construction
+		viewModel.editor.init({
+			investments: [{ name: "MSFT", percentage: 25 },
+						   { name: "GOOG", percentage: 25 },
+						   { name: "APPL", percentage: 50 }]
+		});
+
+		ko.applyBindings(viewModel);
+
+	});
+
+### Pros
+
+We're no longer writing our own event delegation code in each component (or prototypes).  The code is minimal and nicely decoupled.
+
+### Cons
+
+We needed to expose the ``emitter`` property on each component as well as the ``editor.highlightInvestments`` and ``profile.update`` functions so that we could wire them up.  Usually when you're building component-based systems, minimizing your public surface area is important.
+
+## Example X: Amplify
+
 
 **Amplify.js** is a handy library which offers, among other things, pub/sub.  It's very simple, you publish messages to *topics* which are received by anything which has subscribed to it.
 

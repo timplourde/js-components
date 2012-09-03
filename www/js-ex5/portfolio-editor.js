@@ -2,7 +2,9 @@
 PortfolioEditor = function (options) {
     var self = this;
 
-    // EDITOR
+    self.emitter = LucidJS.emitter();
+
+    // observables and methods to edit the portfolio
     self.investments = ko.observableArray();
     self.deleteInvestment = function (investment) {
         self.investments.remove(investment);
@@ -15,60 +17,35 @@ PortfolioEditor = function (options) {
         return total;
     });
 
-    var addInvestment = function (investment) {
-        investment.percentage = ko.observable(investment.percentage || 0);
-        investment.percentage.subscribe(allocChanged);
+    // used when adding a new investment by typing in a ticker symbol
+    self.newInvestmentTickerSymbol = ko.observable();
+    self.addInvestmentByTickerSymbol = function () {
+        var ticker = self.newInvestmentTickerSymbol();
+        if (ticker) {
+            ticker = ticker.toUpperCase().trim();
+            if (ticker.length > 0) {
+                addInvestment({ name: self.newInvestmentTickerSymbol().toUpperCase() });
+                self.newInvestmentTickerSymbol('');
+            }
+        }
+    };
 
+    // private function for adding an investment 
+    var addInvestment = function (investment) {
+        // defaults the percantage to 0
+        investment.percentage = ko.observable(investment.percentage || 0);
+        // subscribe to precentage change events
+        investment.percentage.subscribe(portfolioChanged);
+
+        // add observable property
         investment.isHighlighted = ko.observable(false);
 
         self.investments.push(investment);
     };
 
-    // SAVING
-    self.isSaveButtonEnabled = ko.observable(true);
-    self.save = function () {
-        self.isSaveButtonEnabled(false);
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'save.started',
-            data: 'Saving Portfolio...'
-        });
-        console.log('saving data to ' + options.saveUrl);
-        setTimeout(function () {
-            // 50% chance of success, just to demonstrate some variability
-            new Date().getTime() % 2 === 0 ? saveSuccessful() : saveFailed();
-        }, 1000);
-    };
-    var saveSuccessful = function () {
-        self.isSaveButtonEnabled(true);
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'save.success',
-            data: 'YAY, SUCCESS!'
-        });
-    }
-    var saveFailed = function () {
-        self.isSaveButtonEnabled(true);
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'save.fail',
-            data: 'OH NOES!'
-        });
-    }
+    // called whenever when the overall portfolio changes
+    var portfolioChanged = function () {
 
-    // SELECT INVESTMENTS (i.e. the 'add investments' button)
-    self.selectInvestments = function () {
-        var invsToExclude = _.map(self.investments(), function (inv) {
-            return inv.name;
-        });
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'selectInvestments',
-            data: invsToExclude
-        });
-    };
-
-    var allocChanged = function () {
         // project investments into an object with tickers as keys 
         // e.g. {'GOOG': 15, 'APPL': 45,...}
         var investments = {};
@@ -77,47 +54,41 @@ PortfolioEditor = function (options) {
             var percentage = parseInt(inv.percentage(), 10);
             total += percentage;
             investments[inv.name] = percentage;
-            // un-highlight everything as we go
-            inv.isHighlighted(false);
         });
 
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'portfolioChanged',
-            data: {
-                total: total,
-                investments: investments
-            }
+        fireEvent('portfolioChanged', {
+            total: total,
+            investments: investments
         });
+
     };
 
-    var highlightInvestments = function (invsToHighlight) {
-        _.each(self.investments(), function (inv) {
-            inv.isHighlighted(_.indexOf(invsToHighlight, inv.name) > -1);
-        });
-    }
-
     // subscribe to add/remove of investments
-    self.investments.subscribe(function () {
-        allocChanged();
-    });
+    self.investments.subscribe(portfolioChanged);
 
-    // populate self.investments
-    if (options.investments) {
+   
+    // allow for post-construction initialization of investments
+    self.init = function (options) {
         _.each(options.investments, function (inv) {
             addInvestment(inv);
         });
+    };
+
+    // populate self.investments if passed in CTOR 
+    if (options && options.investments) {
+        self.init(options.investments);
     }
 
-    // subscriptions
-    postal.subscribe({
-        channel: 'PortfolioEditor',
-        topic: 'addInvestment',
-        callback: addInvestment
-    });
-    postal.subscribe({
-        channel: 'PortfolioEditor',
-        topic: 'highlightInvestments',
-        callback: highlightInvestments
-    });
+    // sets .isHighlighted on investments passed as an array of ticker symbols
+    self.highlightInvestments = function (investmentsToHighlight) {
+        _.each(self.investments(), function (inv) {
+            inv.isHighlighted(_.indexOf(investmentsToHighlight, inv.name) > -1);
+        });
+    };
+
+
+    var fireEvent = function (event, data) {
+        self.emitter.trigger(event, data);
+    };
+
 };
