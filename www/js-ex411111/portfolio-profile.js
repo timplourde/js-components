@@ -2,25 +2,6 @@
 PortfolioProfile = function (options) {
     var self = this;
 
-
-    // event aggregation
-    var callbacks = {};
-    self.on = function (eventName, callback) {
-        if (!callbacks[eventName]) {
-            callbacks[eventName] = [];
-        }
-        callbacks[eventName].push(callback);
-    };
-    var publish = function (eventName, data) {
-        if (callbacks[eventName]) {
-            _.each(callbacks[eventName], function (callback) {
-                callback(data);
-            });
-        }
-    };
-
-
-
     self.isVisible = ko.observable(false);
     self.message = ko.observable();
     self.isGood = ko.observable(false);
@@ -28,7 +9,7 @@ PortfolioProfile = function (options) {
 
     var foundBadInvestmentsCallback;
 
-    self.update = function (portfolio) {
+    var update = function (portfolio) {
         // expects portfolio to be:
         // { total: 100,
         //   investments: {'GOOG' : 40,
@@ -51,12 +32,20 @@ PortfolioProfile = function (options) {
         if (portfolio.investments['APPL'] > 50) {
             self.message('Too Conservative');
             self.isBad(true);
-            publish('foundBadInvestments', ['APPL']);
+            postal.publish({
+                channel: 'PortfolioProfile', 
+                topic: 'foundBadInvestments',
+                data: ['APPL']
+            });
             return;
         }
         if (portfolio.investments['FB'] > 1) {
             self.message('Stupid!');
-            publish('foundBadInvestments', ['FB']);
+            postal.publish({
+                channel: 'PortfolioProfile',
+                topic: 'foundBadInvestments',
+                data: ['FB']
+            });
             self.isBad(true);
             return;
         }
@@ -68,5 +57,12 @@ PortfolioProfile = function (options) {
         self.message('No Recommendations');
         return;
     };
+
+    // subscribe 
+    postal.subscribe({
+        channel: 'PortfolioProfile',
+        topic: 'update',
+        callback: update
+    });
 
 };

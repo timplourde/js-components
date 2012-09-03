@@ -2,25 +2,6 @@
 PortfolioEditor = function (options) {
     var self = this;
 
-
-    // event aggregation
-    var callbacks = {};
-    self.on = function (eventName, callback) {
-        if (!callbacks[eventName]) {
-            callbacks[eventName] = [];
-        }
-        callbacks[eventName].push(callback);
-    };
-    var publish = function (eventName, data) {
-        if (callbacks[eventName]) {
-            _.each(callbacks[eventName], function (callback) {
-                callback(data);
-            });
-        }
-    };
-
-
-
     // observables and methods to edit the portfolio
     self.investments = ko.observableArray();
     self.deleteInvestment = function (investment) {
@@ -73,9 +54,13 @@ PortfolioEditor = function (options) {
             investments[inv.name] = percentage;
         });
 
-        publish('portfolioChanged', {
-            total: total,
-            investments: investments
+        postal.publish({
+            channel: 'PortfolioEditor',
+            topic: 'portfolioChanged',
+            data: {
+                total: total,
+                investments: investments
+            }
         });
 
     };
@@ -91,15 +76,17 @@ PortfolioEditor = function (options) {
     }
 
     // sets .isHighlighted on investments passed as an array of ticker symbols
-    self.highlightInvestments = function (investmentsToHighlight) {
+    var highlightInvestments = function (investmentsToHighlight) {
         _.each(self.investments(), function (inv) {
             inv.isHighlighted(_.indexOf(investmentsToHighlight, inv.name) > -1);
         });
     };
 
-    // new public method to add investments after construction
-    self.addInvestments = function (investments) {
-        _.each(investments, addInvestment);
-    };
+    // subscribe 
+    postal.subscribe({
+        channel: 'PortfolioEditor',
+        topic: 'highlightInvestments',
+        callback: highlightInvestments
+    });
 
 };

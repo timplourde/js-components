@@ -2,6 +2,25 @@
 PortfolioEditor = function (options) {
     var self = this;
 
+
+    // event aggregation
+    var callbacks = {};
+    self.on = function (eventName, callback) {
+        if (!callbacks[eventName]) {
+            callbacks[eventName] = [];
+        }
+        callbacks[eventName].push(callback);
+    };
+    var publish = function (eventName, data) {
+        if (callbacks[eventName]) {
+            _.each(callbacks[eventName], function (callback) {
+                callback(data);
+            });
+        }
+    };
+
+
+
     // observables and methods to edit the portfolio
     self.investments = ko.observableArray();
     self.deleteInvestment = function (investment) {
@@ -54,13 +73,9 @@ PortfolioEditor = function (options) {
             investments[inv.name] = percentage;
         });
 
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'portfolioChanged',
-            data: {
-                total: total,
-                investments: investments
-            }
+        publish('portfolioChanged', {
+            total: total,
+            investments: investments
         });
 
     };
@@ -68,25 +83,28 @@ PortfolioEditor = function (options) {
     // subscribe to add/remove of investments
     self.investments.subscribe(portfolioChanged);
 
-    // populate self.investments if relevant 
-    if (options.investments) {
+    // allow for post-construction initialization of investments
+    self.init = function (options) {
         _.each(options.investments, function (inv) {
             addInvestment(inv);
         });
+    };
+
+    // populate self.investments if passed in CTOR 
+    if (options && options.investments) {
+        self.init(options);
     }
 
     // sets .isHighlighted on investments passed as an array of ticker symbols
-    var highlightInvestments = function (investmentsToHighlight) {
+    self.highlightInvestments = function (investmentsToHighlight) {
         _.each(self.investments(), function (inv) {
             inv.isHighlighted(_.indexOf(investmentsToHighlight, inv.name) > -1);
         });
     };
 
-    // subscribe 
-    postal.subscribe({
-        channel: 'PortfolioEditor',
-        topic: 'highlightInvestments',
-        callback: highlightInvestments
-    });
+    // new public method to add investments after construction
+    self.addInvestments = function (investments) {
+        _.each(investments, addInvestment);
+    };
 
 };

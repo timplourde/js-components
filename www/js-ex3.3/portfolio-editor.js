@@ -66,7 +66,7 @@ PortfolioEditor = function (options) {
     // subscribe to add/remove of investments
     self.investments.subscribe(portfolioChanged);
 
-    // new public method to allow for post-construction initialization of investments
+    // allow for post-construction initialization of investments
     self.init = function (options) {
         _.each(options.investments, function (inv) {
             addInvestment(inv);

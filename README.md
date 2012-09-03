@@ -127,17 +127,41 @@ We have avoided the chicken-and-egg problem successfully and we're still decoupl
 
 It's a bit messy.  As we add and extend our components over time, the number of these "optional callbacks" will increase and we'll need to change everything much more often that we'd like to.
 
-## Example 2.2: Event Aggregation
+## Example 4: Event Aggregation
 
-One way to avoid the sequence issues encountered in adding callbacks in constructor functions is to set up some event aggregation.  In this example, we'll use new public functions on each component called ``.on()`` which regiser one or more event handlers to respond to events. We'll also create ``publish()`` private functions to publish events to any listeners.
+One way to avoid the sequence issues encountered in adding callbacks in constructor functions is to set up some event delegation.  In this example, we'll use new public functions on each component called ``.on()`` which regiser one or more event handlers to respond to events. We'll also create ``publish()`` private functions to publish events to any listeners.  The resulting initialization code looks like this:
 
-On the positive side, the components don't know anything about each other and you have a nice way to broadcast events to multiple listeners if necessary.
+        $(document).ready(function () {
 
-On the negative side, the Portfolio Profile UI doesn't appear visible when the page first loads because all the relevant events have been fired while the object was being constructed, BEFORE any callbacks were registered via ``.on()``.  
+            var viewModel = {};
+            viewModel.profile = new PortfolioProfile();
+            viewModel.editor = new PortfolioEditor();
 
-There are ways to to get around this issue.  See the code comments for two options. Neither of them are particularly good, especially if you want to retain the ability to pre-populate the ``editor`` with some investments when constructing it.
+            // register for events after construction
+            viewModel.editor.on('portfolioChanged', viewModel.profile.update);
+            viewModel.profile.on('foundBadInvestments', viewModel.editor.highlightInvestments);
 
-This event aggregation logic is not ideal.  It's duplicated in both components.  There is no logic to unsubscribe callbacks.  Fortunately, this problem has been solved already so there is no need to reinvent the wheel.
+            // init data after events have been wired up
+            viewModel.editor.init({
+                investments: [{ name: "MSFT", percentage: 25 },
+                               { name: "GOOG", percentage: 25 },
+                               { name: "APPL", percentage: 50 }]
+            });
+
+            ko.applyBindings(viewModel);
+
+        });
+
+
+### Pros
+
+The components don't know anything about each other and you have a nice way to broadcast events to multiple listeners if necessary.
+
+### Cons
+
+Since we need to register these event handlers after construction, we needed to add a new ``init`` method on the ``editor`` so that the ``profile`` is visible when the page initially loads.  There are other ways to do this of course, but it's important to point out that this technique usually works best with post-construction initialization.
+
+Also, we'll probably want more functionality eventually like an ``off()`` function for removing subscribers.  Also, all of this event delegation logic is repeated in both components which isn't ideal.  We could add it to a prototype for all components or compose in an event delegation function... but that all smells like we're reinventing the wheel.
 
 ## Example 3: Basic Pub/Sub With Amplify.js
 
