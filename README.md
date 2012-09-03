@@ -48,7 +48,7 @@ It is **extremely important** that both components are decoupled because they wi
 
 ## Example 1: Callback in Constructor
 
-In this example, when constructing the ``editor`` object, we pass in a ``portfolioChangedCallback`` option which gets called whenever the portfolio changes.  This is a simple technique and works well given the requirements.
+In this example, when constructing the ``editor`` object, we pass in an **optional** ``portfolioChangedCallback`` option which gets called whenever the portfolio changes.  This is a simple technique and works well given the requirements.
 
 	$(document).ready(function () {
 
@@ -73,7 +73,7 @@ Mission accomplished, time for happy hour!
 
 As a user, I need any "troublesome" investments to be highlighed in the Portfolio Editor whenver the Portfolio Profile detects a "bad" portfolio so I can identify which ones need my attention.
 
-So now we need two-way communication between our compoments.  Let's see how we can achieve that while remaining decoupled.
+So now we need two-way communication between our components.  Let's see how we can achieve that while remaining decoupled.
 
 ## Example 2: Chicken and Egg
 
@@ -194,19 +194,21 @@ Also, we'll probably want more functionality eventually like an ``off()`` functi
 
 	});
 
+This is very similar to the previous example but we're relying on Lucid to handle all the event delegation work.
+
 ### Pros
 
 We're no longer writing our own event delegation code in each component (or prototypes).  The code is minimal and nicely decoupled.
 
 ### Cons
 
-We needed to expose the ``emitter`` property on each component as well as the ``editor.highlightInvestments`` and ``profile.update`` functions so that we could wire them up.  Usually when you're building component-based systems, minimizing your public surface area is usually important.
+We needed to expose the ``emitter`` property on each component as well as the ``editor.highlightInvestments`` and ``profile.update`` functions so that we could wire them up.  When you're building component-based systems, minimizing your public surface area is usually important.
 
 Like in the previous example, we also needed to initialize our ``editor`` after construction.
 
 ## Example 6: Lucid With Privacy
 
-We'll modify the previous example to hide the public functions of each component by taking advantage of features in lucid.  
+We'll modify the previous example to hide the public functions of each component by taking advantage of features in Lucid.  
 
 	$(document).ready(function () {
 
@@ -293,7 +295,7 @@ Unfortunately we lost some decoupling.  For example, there is no reason why the 
 
 Also, we have a possible topic name collision issue.  If in the future another component decides to publish a "portfolioChanged" event, then you may have unexpected behavior.
 
-We could try to reduce this coupling in a similar way we did with Lucid in the previous example- by making all events "namespaced", aggregating them and forwarding to "private" topics but we can predict what that will look liks to instead let's try another approach.
+We could try to reduce this coupling in a similar way we did with Lucid in the previous example- by making all events "namespaced", aggregating them and forwarding to "private" topics but we can predict what that will look like... so let's try another approach instead.
 
 
 ## Example 8: Postal Message Bus
@@ -342,7 +344,7 @@ Arguably we could have built the same solution using Amplify, but Postal's chann
 
 ### Cons
 
-Postal requires [Underscore.js](http://underscorejs.org/) which we've been using all along.
+Postal requires [Underscore.js](http://underscorejs.org/).
 
 # New Requirements: More Stuff!
 
@@ -357,111 +359,111 @@ Let's make it more interesting by adding more features:
 
 No problem!  We've added new components and wired them up using Postal like so:
 
-$(document).ready(function () {
+	$(document).ready(function () {
 
-	// allos us to listen to all messages on the bus
-	var wireTap = new postal.diagnostics.DiagnosticsWireTap("console", function (env) {
-		console.log(_.pick(JSON.parse(env), 'channel', 'topic', 'data'));
-	});
-
-	// links up one source to one or many destinations
-	// postal.linkChannels doesn't work with there are multiple destinations (not sure why yet)
-	// this also takes a optional "processor" which mutates the message before forwarding it 
-	var forwardMessages = function (source, destination, processor) {
-		if (!_.isArray(destination)) {
-			destination = [destination];
-		}
-		_.each(destination, function (item) {
-			postal.subscribe({
-				channel: source.channel,
-				topic: source.topic,
-				callback: function (msg) {
-					if (processor) msg = processor(msg);
-					postal.publish(item.channel, item.topic, msg);
-				}
-			});
+		// allows us to listen to all messages on the bus
+		var wireTap = new postal.diagnostics.DiagnosticsWireTap("console", function (env) {
+			console.log(_.pick(JSON.parse(env), 'channel', 'topic', 'data'));
 		});
-	};
 
-
-	// forward events between components
-	// portfolioEditor-published
-	forwardMessages(
-		{ channel: 'PortfolioEditor', topic: 'selectInvestments' },
-		{ channel: 'AddInvestmentDialog', topic: 'open' });
-	forwardMessages(
-		{ channel: 'PortfolioEditor', topic: 'save.started' },
-		{ channel: 'SaveDialog', topic: 'showSaving' });
-	forwardMessages(
-		{ channel: 'PortfolioEditor', topic: 'save.success' },
-		{ channel: 'SaveDialog', topic: 'showSuccess' });
-	forwardMessages(
-		{ channel: 'PortfolioEditor', topic: 'save.fail' },
-		{ channel: 'SaveDialog', topic: 'showFail' });
-	forwardMessages(
-		{ channel: 'PortfolioEditor', topic: 'portfolioChanged' },
-		{ channel: 'PortfolioProfile', topic: 'update' });
-	forwardMessages(
-		{ channel: 'PortfolioEditor', topic: 'portfolioChanged' },
-		[{ channel: 'AllocPieChart', topic: 'render' },
-		{ channel: 'AllocBarChart', topic: 'render'}],
-		// these listeners expect data in a different format, so use an optional processor function
-		function (allocChangedMessage) {
-			var chartData = [];
-			_.each(allocChangedMessage.investments, function (pct, name) {
-				chartData.push([name, parseInt(pct, 10)]);
+		// links up one source to one or many destinations
+		// postal.linkChannels doesn't work with there are multiple destinations (not sure why yet)
+		// this also takes a optional "processor" which mutates the message before forwarding it 
+		var forwardMessages = function (source, destination, processor) {
+			if (!_.isArray(destination)) {
+				destination = [destination];
+			}
+			_.each(destination, function (item) {
+				postal.subscribe({
+					channel: source.channel,
+					topic: source.topic,
+					callback: function (msg) {
+						if (processor) msg = processor(msg);
+						postal.publish(item.channel, item.topic, msg);
+					}
+				});
 			});
-			return chartData;
-		});
+		};
+
+
+		// forward events between components
+		// portfolioEditor-published
+		forwardMessages(
+			{ channel: 'PortfolioEditor', topic: 'selectInvestments' },
+			{ channel: 'AddInvestmentDialog', topic: 'open' });
+		forwardMessages(
+			{ channel: 'PortfolioEditor', topic: 'save.started' },
+			{ channel: 'SaveDialog', topic: 'showSaving' });
+		forwardMessages(
+			{ channel: 'PortfolioEditor', topic: 'save.success' },
+			{ channel: 'SaveDialog', topic: 'showSuccess' });
+		forwardMessages(
+			{ channel: 'PortfolioEditor', topic: 'save.fail' },
+			{ channel: 'SaveDialog', topic: 'showFail' });
+		forwardMessages(
+			{ channel: 'PortfolioEditor', topic: 'portfolioChanged' },
+			{ channel: 'PortfolioProfile', topic: 'update' });
+		forwardMessages(
+			{ channel: 'PortfolioEditor', topic: 'portfolioChanged' },
+			[{ channel: 'AllocPieChart', topic: 'render' },
+			{ channel: 'AllocBarChart', topic: 'render'}],
+			// these listeners expect data in a different format, so use an optional processor function
+			function (allocChangedMessage) {
+				var chartData = [];
+				_.each(allocChangedMessage.investments, function (pct, name) {
+					chartData.push([name, parseInt(pct, 10)]);
+				});
+				return chartData;
+			});
 	
-	// portfolioProfiler-published
-	forwardMessages(
-		{ channel: 'PortfolioProfile', topic: 'foundTroublesomeInvestments' },
-		{ channel: 'PortfolioEditor', topic: 'highlightInvestments' });
+		// portfolioProfiler-published
+		forwardMessages(
+			{ channel: 'PortfolioProfile', topic: 'foundTroublesomeInvestments' },
+			{ channel: 'PortfolioEditor', topic: 'highlightInvestments' });
 
-	// addInvestmentDialog-published
-	forwardMessages(
-		{ channel: 'AddInvestmentDialog', topic: 'investmentSelected' },
-		{ channel: 'PortfolioEditor', topic: 'addInvestment' });
+		// addInvestmentDialog-published
+		forwardMessages(
+			{ channel: 'AddInvestmentDialog', topic: 'investmentSelected' },
+			{ channel: 'PortfolioEditor', topic: 'addInvestment' });
 
-	var chart = new AllocPieChart({
-		chartId: 'chart'
+		var chart = new AllocPieChart({
+			chartId: 'chart'
+		});
+
+		var barChart = new AllocBarChart({
+			chartId: 'barChart'
+		});
+
+		var profile = new PortfolioProfile();
+
+		var save = new SaveDialog();
+
+		var picker = new AddInvestmentDialog({
+			getInvestmentsUrl: '/investments/all'
+		});
+
+		var editor = new PortfolioEditor({
+			saveUrl: '/portfolio/save',
+			investments: [{ name: "MSFT", percentage: 25 },
+						   { name: "GOOG", percentage: 25 },
+						   { name: "APPL", percentage: 50}]
+		});
+
+		// instead of one big view model and <!-- ko: with --> statements for each component, 
+		// we're binding each compoment to specific dom nodes
+		// this makes it more possible to add components built with other MV* frameworks in the future
+
+		ko.applyBindings(editor, $('#editor')[0]);
+		ko.applyBindings(profile, $('#profile')[0]);
+		ko.applyBindings(picker, $('#picker')[0]);
+		ko.applyBindings(save, $('#saveDialog')[0]);
 	});
-
-	var barChart = new AllocBarChart({
-		chartId: 'barChart'
-	});
-
-	var profile = new PortfolioProfile();
-
-	var save = new SaveDialog();
-
-	var picker = new AddInvestmentDialog({
-		getInvestmentsUrl: '/investments/all'
-	});
-
-	var editor = new PortfolioEditor({
-		saveUrl: '/portfolio/save',
-		investments: [{ name: "MSFT", percentage: 25 },
-					   { name: "GOOG", percentage: 25 },
-					   { name: "APPL", percentage: 50}]
-	});
-
-	// instead of one big view model and <!-- ko: with --> statements for each component, 
-	// we're binding each compoment to specific dom nodes
-	// this makes it more possible to add components built with other MV* frameworks in the future
-
-	ko.applyBindings(editor, $('#editor')[0]);
-	ko.applyBindings(profile, $('#profile')[0]);
-	ko.applyBindings(picker, $('#picker')[0]);
-	ko.applyBindings(save, $('#saveDialog')[0]);
-});
 
 Here's what we did:
 
 * ``AddInvestmentDialog`` component: displays the list of investments to choose from, excluding a set ticker symbols if relevant. The user can click on the Add button to add one.
 * ``SaveDialog`` component: displays a saving/success/error messages and is wired to the ``editor``'s internal ``save.*`` topic events.
-* ``AllocBarChart`` and ``AllocPieChart`` components: display charts of the current portfolio.  Notice that these components take data in a different format that is currently sent by ``PortfolioEditor.portfolioChanged``.  A special ``forwardMessages`` function is used here like ``postal.linkChannels`` but it takes an optional ``processor`` function which mutates the message in mid-flight.  Note that this should be done sparingly becase mutating a message is generally against message bus design principles. However, it works and doesn't negatively affect subscriber downstream in this specific case.
+* ``AllocBarChart`` and ``AllocPieChart`` components: display charts of the current portfolio.  Notice that these components take data in a different format that is currently sent by ``PortfolioEditor.portfolioChanged``.  A special ``forwardMessages`` function is used here like ``postal.linkChannels`` but it takes an optional ``processor`` function which mutates the message in mid-flight.  Note that this should be done sparingly becase mutating a message is generally against message bus design principles. However, it works and doesn't negatively affect subscriber downstream in this specific case.  Also, we're using the ``withDebounce()`` function in postal to delay rapid execution of callbacks to prevent 'flickering'.
 * We're calling ``ko.applyBindings(vm, domNode)`` for each component instead of making one big view model and binding it to the entire page just to promote composability of the page.  This also makes it easier if any one of the components changes their internal implementation to use a different MV* library internally in the future.
 
 # Summary
@@ -470,7 +472,7 @@ In this tutorial we've seen several techniques for decoupling JavaScript compone
 
 This was just an introduction.  There are many more things you can do to optimize your solution such as:
 
-* Mix and match some of these techniques.  
+* Mix and match some of these techniques.  For example, you can provide support for manual event delegation AND Postal if it's available.
 * Add some additional logic inside your components to insulate you from taking many direct dependencies on these third party libraries.  
 * Use inheritance to reduce boilerplate code. 
 
