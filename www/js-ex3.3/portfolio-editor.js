@@ -66,11 +66,16 @@ PortfolioEditor = function (options) {
     // subscribe to add/remove of investments
     self.investments.subscribe(portfolioChanged);
 
-    // populate self.investments if relevant 
-    if (options.investments) {
+    // new public method to allow for post-construction initialization of investments
+    self.init = function (options) {
         _.each(options.investments, function (inv) {
             addInvestment(inv);
         });
+    };
+
+    // populate self.investments if passed in CTOR 
+    if (options && options.investments) {
+        self.init(options);
     }
 
     // sets .isHighlighted on investments passed as an array of ticker symbols

@@ -108,12 +108,7 @@
             var viewModel = {};
 
             viewModel.profile = new PortfolioProfile();
-
-            viewModel.editor = new PortfolioEditor({
-                investments: [{ name: "MSFT", percentage: 25 },
-                               { name: "GOOG", percentage: 25 },
-                               { name: "APPL", percentage: 50}]
-            });
+            viewModel.editor = new PortfolioEditor();
 
             // pipe component events to 'central'
             var central = LucidJS.emitter();
@@ -134,6 +129,13 @@
             });
             central.on('PortfolioProfile', function (data) {
                 console.log(data);
+            });
+
+            // initialize after construction
+            viewModel.editor.init({
+                investments: [{ name: "MSFT", percentage: 25 },
+                               { name: "GOOG", percentage: 25 },
+                               { name: "APPL", percentage: 50 }]
             });
             
             ko.applyBindings(viewModel);
