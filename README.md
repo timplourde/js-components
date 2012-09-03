@@ -1,3 +1,4 @@
+
 # JS Components
 
 This is a tutorial with several examples of how to wire up JavaScript components, emphasizing the pros and cons of each. Techniques used include traditional callbacks, event delegation, [Lucid.js](http://robertwhurst.github.com/LucidJS/) event emitters, pub/sub using [Amplify.js](http://amplifyjs.com/) and finally client-side message bus using [Postal.js](https://github.com/ifandelse/postal.js).
@@ -288,25 +289,61 @@ Look how clean that is!  We're no longer worried about wiring things up, we just
 
 Unfortunately we lost some decoupling.  For example, there is no reason why the ``profile`` component needs to know about something called a `portfolioChanged` event/topic.  As we add components to our application, they will all need to be modified to know about each other.  
 
-We could try to reduce this coupling in a similar way we did with Lucid in the previous example- by making all events "namespaced", aggregating them and forwarding to "private" topics but instead let's try another approach.
+Also, we have a possible topic name collision issue.  If in the future another component decides to publish a "portfolioChanged" event, then you may have unexpected behavior.
+
+We could try to reduce this coupling in a similar way we did with Lucid in the previous example- by making all events "namespaced", aggregating them and forwarding to "private" topics but we can predict what that will look liks to instead let's try another approach.
 
 
+## Example 8: Postal Message Bus
 
-## Example 3.1: Basic Pub/Sub with jQuery 
+[Postal.js](https://github.com/ifandelse/postal.js) provides feature-rich, AMQP-style message bus.  The most important difference over simple event delegation is that all messages flow within "channels" instead of only topics.  This provides a natural boundary to work in.  
 
-Side note: if the previous basic pub/sub technique works for you but you don't want all the weight of Amplify.js, you can achieve the same thing by using a small jQuery plugin called Tiny Pub/Sub.
+In this example, we've modified our components to publish and subscribe to  events to only their own channels, e.g. 'PortfolioEditor.portfolioChanged'.  We then use the ``postal.linkChannels`` function to forward events from one component to another.    
 
-All we changed was calls to ``amplify.publish/amplify.subscribe`` to ``$.publish/$.subscribe``. Also, because this uses jQuery Events internally, each callback receives a ``event`` object which it ignores.  That's may be accpetable for your needs.
+	$(document).ready(function () {
 
-## Example 3.2: Event emitters with Lucid
+		// BONUS! postal wiretap: listen to all messages with optional filters
+		var wireTap = new postal.diagnostics.DiagnosticsWireTap("console", function (env) {
+			console.log(_.pick(JSON.parse(env), 'channel', 'topic', 'data'));
+		});
 
-Here we're using Lucid.js to add public event emitters to each component and wiring them up after they are constructed.  Each component internally triggers events on its emitter.  
-On the plus side, the code is pretty minimal and nicely decoupled. On the negatie side, we need to expose more public functions on each component to wire them up (e.g. ``update`` in the ``editor`` used to be private) and we needed this new ``emitter`` property on each component.
+		// postal linkChannels: forwards messages from one channel/topic to another
+		postal.linkChannels(
+			{ channel: 'PortfolioEditor', topic: 'portfolioChanged' },
+			{ channel: 'PortfolioProfile', topic: 'update' });
 
-## Example 3.3: Lucid event aggregation
+		postal.linkChannels(
+			{ channel: 'PortfolioProfile', topic: 'foundBadInvestments' },
+			{ channel: 'PortfolioEditor', topic: 'highlightInvestments' });
 
-In this example we are able to hide some of those unwanted public functions by taking advantage of Lucid's ``pipe`` function which allows you to forward events.  This requires us to rename events so that they are "namespaced" using dots.  Lucid allows for "sub events" using dot notation, so we're also able to log all events in the ``centralHub`` emitter based on the component.
-On the plus side, we're able to minimize the surface area of each component and gained some logging functionality.  On the negative side, there's more code to wire up the events than in the previous example and we still need the public ``emitter`` property on each component.
+		var viewModel = {};
+
+		viewModel.profile = new PortfolioProfile();
+
+		viewModel.editor = new PortfolioEditor({
+			investments: [{ name: "MSFT", percentage: 25 },
+						   { name: "GOOG", percentage: 25 },
+						   { name: "APPL", percentage: 50}]
+		});
+
+		ko.applyBindings(viewModel);
+
+	});
+
+### Pros
+
+Our components are completely decoupled.  This is very similar to the example with Lucid except we don't need to expose that ``emitter`` property and with Postal, we get event aggregation features for free.
+
+We also are using a cool feature called a wire tap to monitor the postal message bus.  Check your console for all the messages that are fired as the app is initialized and used.  This is very useful when relying on messaging to glue together your components.
+
+Arguably we could have built the same solution using Amplify, but Postal's channel concept and other features makes it much easier to do so.
+
+### Cons
+
+Postal requires [Underscore.js](http://underscorejs.org/) which we've been using all along.
+
+---
+
 
 ## Example 4: Message Bus with Postal.js
 

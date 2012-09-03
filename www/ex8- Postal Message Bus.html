@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>My Portfolio: Ex4-Message Bus with Postal</title>
+    <title>My Portfolio: Ex8- Postal Message Bus</title>
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
@@ -13,7 +13,7 @@
    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <span class="brand">My Portfolio: Ex4-Message Bus with Postal</span>
+          <span class="brand">My Portfolio: Ex8- Postal Message Bus</span>
         </div>
       </div>
     </div>
@@ -100,13 +100,13 @@
     <script type="text/javascript" src="js-common/knockout-2.1.0.js"></script>
     <script type="text/javascript" src="js-common/postal.js"></script>
     <script type="text/javascript" src="js-common/postal.diagnostics.js"></script>
-    <script type="text/javascript" src="js-ex4/portfolio-editor.js"></script>
-    <script type="text/javascript" src="js-ex4/portfolio-profile.js"></script>
+    <script type="text/javascript" src="js-ex8/portfolio-editor.js"></script>
+    <script type="text/javascript" src="js-ex8/portfolio-profile.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
 
-            // postal wiretap: listen to all messages with optional filters
+            // BONUS! postal wiretap: listen to all messages with optional filters
             var wireTap = new postal.diagnostics.DiagnosticsWireTap("console", function (env) {
                 console.log(_.pick(JSON.parse(env), 'channel', 'topic', 'data'));
             });

@@ -9,7 +9,7 @@ PortfolioProfile = function (options) {
 
     var foundBadInvestmentsCallback;
 
-    var update = function (event, portfolio) {
+    var update = function (portfolio) {
         // expects portfolio to be:
         // { total: 100,
         //   investments: {'GOOG' : 40,
@@ -32,12 +32,12 @@ PortfolioProfile = function (options) {
         if (portfolio.investments['APPL'] > 50) {
             self.message('Too Conservative');
             self.isBad(true);
-            $.publish('foundBadInvestments', ['APPL']);
+            fireEvent('foundBadInvestments', ['APPL']);
             return;
         }
         if (portfolio.investments['FB'] > 1) {
             self.message('Stupid!');
-            $.publish('foundBadInvestments', ['FB']);
+            fireEvent('foundBadInvestments', ['FB']);
             self.isBad(true);
             return;
         }
@@ -51,6 +51,19 @@ PortfolioProfile = function (options) {
     };
 
     // subscribe 
-    $.subscribe('portfolioChanged', update);
+    postal.subscribe({
+        channel: 'PortfolioProfile',
+        topic: 'update',
+        callback: update
+    });
+
+
+    var fireEvent = function (event, data) {
+        postal.publish({
+            channel: 'PortfolioProfile',
+            topic: event,
+            data: data
+        });
+    };
 
 };

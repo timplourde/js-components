@@ -41,6 +41,15 @@ PortfolioEditor = function (options) {
         self.investments.push(investment);
     };
 
+    var fireEvent = function (event, data) {
+        postal.publish({
+            channel: 'PortfolioEditor',
+            topic: event,
+            data: data
+        });
+    };
+
+
     // called whenever when the overall portfolio changes
     var portfolioChanged = function () {
 
@@ -54,13 +63,9 @@ PortfolioEditor = function (options) {
             investments[inv.name] = percentage;
         });
 
-        postal.publish({
-            channel: 'PortfolioEditor',
-            topic: 'portfolioChanged',
-            data: {
-                total: total,
-                investments: investments
-            }
+        fireEvent('portfolioChanged',{
+            total: total,
+            investments: investments
         });
 
     };
