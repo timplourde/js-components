@@ -8,11 +8,12 @@ This tutorial is intended for web developers who are starting to build complex c
 
 ## Before You Begin
 
-These examples make use **Knockout.js** for basic data-binding/templating/MVVM functionality.  If you are not familiar with Knockout, check out the online tutorials at [learn.knockoutjs.com](http://learn.knockoutjs.com/).  It's worth your time!
+The examples in this turorial:
+* Use [Knockout.js](http://knockoutjs.com/) for basic data-binding/templating/MVVM functionality.  If you are not familiar with Knockout, check out the online tutorials at [learn.knockoutjs.com](http://learn.knockoutjs.com/).  It's worth your time!
+* Can easily be re-written to have each component use different MV* libraries internally such as Backbone.js or whatever.
+* Don't bother to be feature-complete with stuff like input validation.
 
-These examples can easily be re-written to have each component use different MV* libraries internally such as Backbone.js or whatever.
-
-These examples also use a basic technique for "constructor functions" like so:
+The examples also use a basic technique for "constructor functions" like so:
 
 	foo = function(){
 		var self = this;
@@ -28,7 +29,7 @@ These examples also use a basic technique for "constructor functions" like so:
 
 This is not the most effecient/usable way of constructing objects, but it's easy to understand.
 
-These examples don't bother to do things like basic input validation because that is boring.
+
 	
 # Requirements
 
@@ -466,6 +467,12 @@ Here's what we did:
 # Summary
 
 In this tutorial we've seen several techniques for decoupling JavaScript components: manual callbacks, event delegation, Lucid, Amplify and Postal.  They all have their pros and cons.
+
+This was just an introduction.  There are many more things you can do to optimize your solution such as:
+
+* Mix and match some of these techniques.  
+* Add some additional logic inside your components to insulate you from taking many direct dependencies on these third party libraries.  
+* Use inheritance to reduce boilerplate code. 
 
 There is no "best practice", only practices which are appropriate to your context.  
 
