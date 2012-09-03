@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>My Portfolio: Ex2- Two-Way Callbacks (DOES NOT WORK)</title>
+    <title>My Portfolio: Ex3- Nested Callbacks</title>
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
@@ -13,7 +13,7 @@
    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <span class="brand">My Portfolio: Ex2- Two-Way Callbacks (DOES NOT WORK)</span>
+          <span class="brand">My Portfolio: Ex3- Nested Callbacks</span>
         </div>
       </div>
     </div>
@@ -92,30 +92,21 @@
        </div>
       </div>
 
-      <div class="row">
-         <h1>THIS TECHNIQUE DOESN'T WORK</h1>
-         <h2>Used for illustration purposes only</h2>
-      </div>
-
     </div>
-
-    
 
 
     <script type="text/javascript" src="js-common/jquery.min.js"></script>
     <script type="text/javascript" src="js-common/underscore-min.js"></script>
     <script type="text/javascript" src="js-common/knockout-2.1.0.js"></script>
-    <script type="text/javascript" src="js-ex2/portfolio-editor.js"></script>
-    <script type="text/javascript" src="js-ex2/portfolio-profile.js"></script>
+    <script type="text/javascript" src="js-ex3/portfolio-editor.js"></script>
+    <script type="text/javascript" src="js-ex3/portfolio-profile.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
 
             var viewModel = {};
 
-            viewModel.profile = new PortfolioProfile({
-                foundBadInvestmentsCallback: viewModel.editor.highlightInvestments
-            });
+            viewModel.profile = new PortfolioProfile();
 
             viewModel.editor = new PortfolioEditor({
                 investments: [{ name: "MSFT", percentage: 25 },

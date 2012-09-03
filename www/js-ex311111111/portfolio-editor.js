@@ -43,25 +43,22 @@ PortfolioEditor = function (options) {
 
     // called whenever when the overall portfolio changes
     var portfolioChanged = function () {
-        if (options.portfolioChangedCallback) {
 
-            // project investments into an object with tickers as keys 
-            // e.g. {'GOOG': 15, 'APPL': 45,...}
-            var investments = {};
-            var total = 0;
-            _.each(self.investments(), function (inv) {
-                var percentage = parseInt(inv.percentage(), 10);
-                total += percentage;
-                investments[inv.name] = percentage;
-            });
+        // project investments into an object with tickers as keys 
+        // e.g. {'GOOG': 15, 'APPL': 45,...}
+        var investments = {};
+        var total = 0;
+        _.each(self.investments(), function (inv) {
+            var percentage = parseInt(inv.percentage(), 10);
+            total += percentage;
+            investments[inv.name] = percentage;
+        });
 
-            // call the callback
-            options.portfolioChangedCallback({
-                total: total,
-                investments: investments,
-                foundBadInvestmentsCallback: self.highlightInvestments
-            });
-        }
+        amplify.publish('portfolioChanged', {
+            total: total,
+            investments: investments
+        });
+
     };
 
     // subscribe to add/remove of investments
@@ -75,10 +72,13 @@ PortfolioEditor = function (options) {
     }
 
     // sets .isHighlighted on investments passed as an array of ticker symbols
-    self.highlightInvestments = function (investmentsToHighlight) {
+    var highlightInvestments = function (investmentsToHighlight) {
         _.each(self.investments(), function (inv) {
-            inv.isHighlighted(_.indexOf( investmentsToHighlight, inv.name) > -1);
+            inv.isHighlighted(_.indexOf(investmentsToHighlight, inv.name) > -1);
         });
     };
+
+    // subscribe 
+    amplify.subscribe('foundBadInvestments', highlightInvestments);
 
 };

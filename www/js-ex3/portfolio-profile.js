@@ -9,12 +9,18 @@ PortfolioProfile = function (options) {
 
     var foundBadInvestmentsCallback;
 
-    var update = function (portfolio) {
+    self.update = function (portfolio) {
         // expects portfolio to be:
         // { total: 100,
         //   investments: {'GOOG' : 40,
-        //                 'APPL' : 60, ... }
+        //                 'APPL' : 60, ... },
+        //  foundBadInvestmentsCallback: function
         //  }
+
+        // save the callback for later
+        if (portfolio.foundBadInvestmentsCallback) {
+            foundBadInvestmentsCallback = portfolio.foundBadInvestmentsCallback;
+        }
 
         analyze(portfolio);
         self.isVisible(true);
@@ -32,12 +38,12 @@ PortfolioProfile = function (options) {
         if (portfolio.investments['APPL'] > 50) {
             self.message('Too Conservative');
             self.isBad(true);
-            amplify.publish('foundBadInvestments', ['APPL']);
+            foundBadInvestments(['APPL']);
             return;
         }
         if (portfolio.investments['FB'] > 1) {
             self.message('Stupid!');
-            amplify.publish('foundBadInvestments', ['FB']);
+            foundBadInvestments(['FB']);
             self.isBad(true);
             return;
         }
@@ -50,7 +56,10 @@ PortfolioProfile = function (options) {
         return;
     };
 
-    // subscribe 
-    amplify.subscribe('portfolioChanged', update);
-
+    var foundBadInvestments = function (badInvestments) {
+        // badInvestments will be an array of ticker symbols
+        if (foundBadInvestmentsCallback) {
+            foundBadInvestmentsCallback(badInvestments);
+        }
+    };
 };

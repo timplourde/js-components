@@ -1,14 +1,14 @@
 # JS Components
 
-Examples of how to wire up JavaScript components, emphasizing the pros and cons of each. Techniques used include traditional callbacks, maunal event aggregation pub/sub using [Amplify.js](http://amplifyjs.com/) and client-side message bus using [Postal.js](https://github.com/ifandelse/postal.js).
+This is a tutorial with several examples of how to wire up JavaScript components, emphasizing the pros and cons of each. Techniques used include traditional callbacks, event delegation, [Lucid.js](http://robertwhurst.github.com/LucidJS/) event emitters, pub/sub using [Amplify.js](http://amplifyjs.com/) and [jQuery Tiny Pub/Sub](https://gist.github.com/661855/) and finally client-side message bus using [Postal.js](https://github.com/ifandelse/postal.js).
 
-This is intended for web developers who are starting to build complex client-side features (without a rich component libraries like YUI or EXT.JS) and encountering maintainability/flexability issues.  
+This tutorial is intended for web developers who are starting to build complex client-side features (without a rich component libraries like YUI or EXT.JS) and encountering maintainability/flexability issues.  
 
 ## Before You Begin
 
 These examples make use **Knockout.js** for basic data-binding/templating/MVVM functionality.  If you are not familiar with Knockout, check out the online tutorials at [learn.knockoutjs.com](http://learn.knockoutjs.com/).  It's worth your time!
 
-These examples can easily be re-written to have each component use different MV* libraries internally such as Backbone.js.
+These examples can easily be re-written to have each component use different MV* libraries internally such as Backbone.js or whatever.
 
 These examples also use a basic technique for "constructor functions" like so:
 
@@ -24,13 +24,11 @@ These examples also use a basic technique for "constructor functions" like so:
 	var x = new foo();
 	console.log(x);	// notice how only 'public' is visible
 
-This is not the most effecient/usable way of constructing objects, but it's terse and easy to understand.
+This is not the most effecient/usable way of constructing objects, but it's easy to understand.
 
 These examples don't bother to do things like basic input validation because that is boring.
-
-All examples below can be found in the ``www`` directory.
 	
-## Background
+# Requirements
 
 You need to build an application for a Financial Services company which will consist of two components:
 
@@ -43,25 +41,91 @@ You need to build an application for a Financial Services company which will con
 	* If > 20% in MSFT AND > 20% in GOOG, it's considered "good" and "Well Balanced"
 	* Else, "No Recommendations"
 
-It is extremely important that both components are decoupled because they will be used in other places in the application.
+It is **extremely important** that both components are decoupled because they will be used in other places in the application.
 
-## Example 1: One Way Callback
+## Example 1: Callback in Constructor
 
 In this example, when constructing the ``editor`` object, we pass in a ``portfolioChangedCallback`` option which gets called whenever the portfolio changes.  This is a simple technique and works well given the requirements.
 
+	$(document).ready(function () {
+
+		var viewModel = {};
+
+		viewModel.profile = new PortfolioProfile();
+
+		viewModel.editor = new PortfolioEditor({
+			investments: [{ name: "MSFT", percentage: 25 },
+						   { name: "GOOG", percentage: 25 },
+						   { name: "APPL", percentage: 50}],
+			portfolioChangedCallback: viewModel.profile.update
+		});
+
+		ko.applyBindings(viewModel);
+
+	});
+
 Mission accomplished, time for happy hour!
 
-## Example 2: Two-Way Callback
+# Requirements Change!
 
-**NEW REQUIREMENTS:** As a user, I need any "troublesome" investments to be highlighed in the Portfolio Editor whenver the Portfolio Profile detects a "bad" portfolio so I can identify which ones need my attention.
+As a user, I need any "troublesome" investments to be highlighed in the Portfolio Editor whenver the Portfolio Profile detects a "bad" portfolio so I can identify which ones need my attention.
 
-We'll use the same technique to add an event handler for the ``profile`` as we did with the ``editor``.  This **DOES NOT WORK** however because the ``editor`` doesn't exist when we construct the ``profile``.  There's no way to solve it using this technique because it's a chicken-and-egg problem.  
+## Example 2: Chicken and Egg
 
-## Example 2.1: Nested Callbacks
+We'll use the same technique to add an event handler for the ``profile`` as we did with the ``editor``.  
 
-Ok, let's try another approach.  One funky way to get around this issue is to embed a callback function in the message that is passed from the ``editor`` to the ``profile``.  You'll notice an additonal property called ``foundBadInvestmentsCallback`` being sent to the ``profile`` which it later calls if any troublesome investments are found.
+	$(document).ready(function () {
 
-This works, but it's a bit messy.  The ``editor`` knows too much about the ``profile`` and it will cause maintenance issues down the road.  We can do better.
+		var viewModel = {};
+
+		viewModel.profile = new PortfolioProfile({
+			foundBadInvestmentsCallback: viewModel.editor.highlightInvestments
+		});
+
+		viewModel.editor = new PortfolioEditor({
+			investments: [{ name: "MSFT", percentage: 25 },
+						   { name: "GOOG", percentage: 25 },
+						   { name: "APPL", percentage: 50}],
+			portfolioChangedCallback: viewModel.profile.update
+		});
+	  
+		ko.applyBindings(viewModel);
+
+	});
+
+
+This **DOES NOT WORK** however because the ``editor`` doesn't exist when we construct the ``profile``.  There's no way to solve it using this technique because it's a [chicken-and-egg](http://en.wikipedia.org/wiki/Chicken_or_the_egg) problem.  
+
+## Example 3: Nested Callbacks
+
+One funky way to get around this issue is to embed a callback function in the message that is passed from the ``editor`` to the ``profile``.  
+
+	$(document).ready(function () {
+
+		var viewModel = {};
+
+		viewModel.profile = new PortfolioProfile();
+
+		viewModel.editor = new PortfolioEditor({
+			investments: [{ name: "MSFT", percentage: 25 },
+						   { name: "GOOG", percentage: 25 },
+						   { name: "APPL", percentage: 50}],
+			portfolioChangedCallback: viewModel.profile.update
+		});
+	  
+		ko.applyBindings(viewModel);
+
+	});
+
+You'll notice an additonal property called ``foundBadInvestmentsCallback`` being sent to the ``profile`` which it later calls if any troublesome investments are found.
+
+### Pros
+
+We have avoided the chicken-and-egg problem successfully and we're still decoupled because each component doesn't know about each other.
+
+### Cons
+
+It's a bit messy.  As we add and extend our components over time, the number of these "optional callbacks" will increase and we'll need to change everything much more often that we'd like to.
 
 ## Example 2.2: Event Aggregation
 
