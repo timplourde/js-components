@@ -346,7 +346,15 @@ Arguably we could have built the same solution using Amplify, but Postal's chann
 
 Postal requires [Underscore.js](http://underscorejs.org/).
 
-# New Requirements: More Stuff!
+# Just use Knockout
+
+Bonus point for you if while reading this you've thought "Knockout is based on the observable pattern... Can't you just use that for hooking together components?"  
+
+Ryan Niemeyer explains just how to do this and on his blog: [Using KO's Native PubSub for Decoupled Synchronization](http://www.knockmeout.net/2012/05/using-ko-native-pubsub.html).  He also built a library called [knockout-postbox](https://github.com/rniemeyer/knockout-postbox) to this effect.
+
+The only downside to this approach is it requires all components will require knockout, which in these examples is fine.
+
+# New Requirements!!!
 
 Let's make it more interesting by adding more features:
 
